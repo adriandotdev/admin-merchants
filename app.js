@@ -49,6 +49,7 @@ app.use(cookieParser());
  * Import all of your routes below
  */
 // Import here
+require("./api/merchants.api")(app);
 
 app.use("*", (req, res, next) => {
 	logger.error({
