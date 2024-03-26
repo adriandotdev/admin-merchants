@@ -1,5 +1,5 @@
 const nodemailer = require("nodemailer");
-const winston = require("../config/winston");
+const logger = require("../config/winston");
 
 const transporter = nodemailer.createTransport({
 	name: process.env.NODEMAILER_NAME || "",
@@ -24,9 +24,9 @@ module.exports = class Email {
 		this._data = data;
 	}
 
-	async SendOTP() {
-		winston.info({
-			CLASS_EMAIL_SEND_OTP_METHOD: {
+	async SendUsernameAndPassword() {
+		logger.info({
+			CLASS_EMAIL_SEND_USERNAME_AND_PASSWORD_METHOD: {
 				email: this._email_address,
 				from: process.env.NODEMAILER_USER,
 				to: this._email_address,
@@ -38,14 +38,25 @@ module.exports = class Email {
 			let htmlFormat = `
 			  <h1>ParkNcharge</h1>
 	
-			  <h2>PLEASE DO NOT SHARE THIS OTP TO ANYONE</h2>
-			  ${this._data.otp}
+			  <h2>PLEASE DO NOT SHARE THIS TO ANYONE</h2>
 			  
+			  <p>Username: ${this._data.username}</p>
+			  <p>Password: ${this._data.password}</p>
+
 			  <p>Kind regards,</p>
 			  <p><b>ParkNcharge</b></p>
 			`;
 
-			let textFormat = `ParkNcharge\n\nPLEASE DO NOT SHARE THIS OTP TO ANYONE\n\nKind regards,\nParkNCharge`;
+			let textFormat = `<h1>ParkNcharge</h1>
+	
+			<h2>PLEASE DO NOT SHARE THIS TO ANYONE</h2>
+			
+			<p>Username: ${this._data.username}</p>
+			<p>Password: ${this._data.password}</p>
+
+			<p>Kind regards,</p>
+			<p><b>ParkNcharge</b></p>`;
+
 			// send mail with defined transport object
 			const info = await transporter.sendMail({
 				from: process.env.NODEMAILER_USER, // sender address
@@ -55,13 +66,13 @@ module.exports = class Email {
 				html: htmlFormat, // html body
 			});
 
-			winston.info({
-				CLASS_EMAIL_SEND_OTP_METHOD: {
+			logger.info({
+				CLASS_EMAIL_SEND_USERNAME_AND_PASSWORD_METHOD: {
 					message: info.messageId,
 				},
 			});
 		} catch (err) {
-			winston.error({ CLASS_EMAIL_SEND_OTP_METHOD: { err } });
+			logger.error({ CLASS_EMAIL_SEND_USERNAME_AND_PASSWORD_METHOD: { err } });
 			throw new Error({ connection: data.connection });
 		}
 	}
