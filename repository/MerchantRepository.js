@@ -52,4 +52,41 @@ module.exports = class MerchantRepository {
 			);
 		});
 	}
+
+	/**
+	 * @param {String} cpoOwnerName
+	 * @returns {Promise<Object>}
+	 */
+	SearchCPOByName(cpoOwnerName) {
+		const QUERY = `
+		SELECT * 
+		FROM cpo_owners
+		WHERE LOWER(cpo_owner_name) LIKE ?`;
+
+		return new Promise((resolve, reject) => {
+			mysql.query(QUERY, [`%${cpoOwnerName}%`], (err, result) => {
+				if (err) {
+					reject(err);
+				}
+				resolve(result);
+			});
+		});
+	}
+
+	UpdateCPOByID({ id, query }) {
+		const QUERY = `UPDATE cpo_owners
+		INNER JOIN users
+		ON cpo_owners.user_id = users.id
+		${query} WHERE cpo_owners.id = ?`;
+
+		return new Promise((resolve, reject) => {
+			mysql.query(QUERY, [id], (err, result) => {
+				if (err) {
+					reject(err);
+				}
+
+				resolve(result);
+			});
+		});
+	}
 };

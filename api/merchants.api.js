@@ -164,4 +164,124 @@ module.exports = (app) => {
 			}
 		}
 	);
+
+	app.get(
+		"/admin_merchants/api/v1/merchants/:cpo_owner_name",
+		[AccessTokenVerifier],
+		/**
+		 * @param {import('express').Request} req
+		 * @param {import('express').Response} res
+		 */
+		async (req, res) => {
+			try {
+				if (req.role !== "ADMIN")
+					throw new HttpUnauthorized("Unauthorized", []);
+
+				const { cpo_owner_name } = req.params;
+
+				logger.info({
+					SEARCH_CPO_BY_NAME_REQUEST: {
+						cpo_owner_name,
+					},
+				});
+
+				const result = await service.SearchCPOByName(cpo_owner_name);
+
+				logger.info({
+					SEARCH_CPO_BY_NAME_RESPONSE: {
+						message: "SUCCESS",
+					},
+				});
+
+				return res
+					.status(200)
+					.json({ status: 200, data: result, message: "Success" });
+			} catch (err) {
+				return res.status(err.status || 500).json({
+					status: err.status || 500,
+					data: err.data || [],
+					message: err.message || "Internal Server Error",
+				});
+			}
+		}
+	);
+
+	app.patch(
+		"/admin_merchants/api/v1/merchants/:id",
+		[
+			AccessTokenVerifier,
+			body("cpo_owner_name")
+				.optional()
+				.notEmpty()
+				.withMessage("Missing required property: cpo_owner_name")
+				.escape()
+				.trim(),
+			body("contact_name")
+				.optional()
+				.notEmpty()
+				.withMessage("Missing required property: contact_person")
+				.escape()
+				.trim(),
+			body("contact_number")
+				.optional()
+				.notEmpty()
+				.withMessage("Missing required property: contact_number")
+				.escape()
+				.trim(),
+			body("contact_email")
+				.optional()
+				.notEmpty()
+				.withMessage("Missing required property: contact_email")
+				.isEmail()
+				.withMessage("Please provide a valid contact_email")
+				.escape()
+				.trim(),
+			body("username")
+				.optional()
+				.notEmpty()
+				.withMessage("Missing required property: username")
+				.escape()
+				.trim(),
+		],
+
+		/**
+		 * @param {import('express').Request} req
+		 * @param {import('express').Response} res
+		 */
+		async (req, res) => {
+			try {
+				logger.info({
+					UPDATE_CPO_BY_ID_REQUEST: {
+						id: req.params.id,
+						...req.body,
+					},
+				});
+
+				if (req.role !== "ADMIN")
+					throw new HttpUnauthorized("Unauthorized", []);
+
+				validate(req, res);
+
+				const result = await service.UpdateCPOByID({
+					id: req.params.id,
+					data: { ...req.body },
+				});
+
+				logger.info({
+					UPDATE_CPO_BY_ID_RESPONSE: {
+						message: "SUCCESS",
+					},
+				});
+				return res
+					.status(200)
+					.json({ status: 200, data: result, message: "Success" });
+			} catch (err) {
+				return res.status(err.status || 500).json({
+					status: err.status || 500,
+					data: err.data || [],
+					message: err.message || "Internal Server Error",
+				});
+			}
+		}
+	);
 };

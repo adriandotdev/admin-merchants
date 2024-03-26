@@ -33,4 +33,59 @@ module.exports = class MerchantService {
 
 		return status;
 	}
+
+	/**
+	 * @param {String} cpoOwnerName
+	 * @returns
+	 */
+	async SearchCPOByName(cpoOwnerName) {
+		const result = await this.#repository.SearchCPOByName(
+			cpoOwnerName.toLowerCase()
+		);
+
+		return result;
+	}
+
+	async UpdateCPOByID({ id, data }) {
+		const VALID_INPUTS = [
+			"cpo_owner_name",
+			"contact_name",
+			"contact_number",
+			"contact_email",
+			"username",
+		];
+
+		if (!Object.keys(data).every((value) => VALID_INPUTS.includes(value)))
+			throw new HttpBadRequest(`Valid inputs are: ${VALID_INPUTS.join(", ")}`);
+
+		if (Object.keys(data).length === 0) {
+			// Check if data object is empty
+			return "NO_CHANGES_APPLIED";
+		}
+
+		let newData = {};
+
+		// Encrypt all of the updated data except the username.
+		Object.keys(data).forEach((key) => {
+			newData[key] = data[key];
+		});
+
+		// Setting up the query
+		let query = "SET";
+
+		const dataEntries = Object.entries(newData);
+
+		for (const [key, value] of dataEntries) {
+			query += ` ${key} = '${value}',`;
+		}
+
+		const updateResult = await this.#repository.UpdateCPOByID({
+			id,
+			query: query.slice(0, query.length - 1),
+		});
+
+		if (updateResult.affectedRows > 0) return "SUCCESS";
+
+		return updateResult;
+	}
 };
