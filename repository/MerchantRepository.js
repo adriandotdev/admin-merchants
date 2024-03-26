@@ -89,4 +89,18 @@ module.exports = class MerchantRepository {
 			});
 		});
 	}
+
+	AddRFID(cpoOwnerID, rfidCardTag) {
+		const QUERY = `CALL WEB_ADMIN_ADD_RFID(?,?)`;
+
+		return new Promise((resolve, reject) => {
+			mysql.query(QUERY, [cpoOwnerID, rfidCardTag], (err, result) => {
+				if (err) {
+					reject(err);
+				}
+
+				resolve(result);
+			});
+		});
+	}
 };

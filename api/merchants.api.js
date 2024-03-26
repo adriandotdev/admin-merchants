@@ -284,4 +284,44 @@ module.exports = (app) => {
 			}
 		}
 	);
+
+	app.post(
+		"/admin_merchants/api/v1/merchants/rfid/:cpo_owner_id/:rfid_card_tag",
+		[AccessTokenVerifier],
+
+		/**
+		 * @param {import('express').Request} req
+		 * @param {import('express').Response} res
+		 */
+		async (req, res) => {
+			try {
+				const { cpo_owner_id, rfid_card_tag } = req.params;
+
+				logger.info({
+					ADD_RFID_REQUEST: {
+						cpo_owner_id,
+						rfid_card_tag,
+					},
+				});
+
+				const result = await service.AddRFID(cpo_owner_id, rfid_card_tag);
+
+				logger.info({
+					ADD_RFID_RESPONSE: {
+						message: "SUCCESS",
+					},
+				});
+
+				return res
+					.status(200)
+					.json({ status: 200, data: result, message: "Success" });
+			} catch (err) {
+				return res.status(err.status || 500).json({
+					status: err.status || 500,
+					data: err.data || [],
+					message: err.message || "Internal Server Error",
+				});
+			}
+		}
+	);
 };

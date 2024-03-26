@@ -88,4 +88,12 @@ module.exports = class MerchantService {
 
 		return updateResult;
 	}
+
+	async AddRFID(cpoOwnerID, rfidCardTag) {
+		const result = await this.#repository.AddRFID(cpoOwnerID, rfidCardTag);
+
+		const status = result[0][0].STATUS;
+
+		return status;
+	}
 };
