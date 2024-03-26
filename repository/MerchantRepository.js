@@ -1,16 +1,21 @@
 const mysql = require("../database/mysql");
 
 module.exports = class MerchantRepository {
-	GetCPOs() {
-		const QUERY = `SELECT * FROM cpo_owners`;
-		return new Promise((resolve, reject) => {
-			mysql.query(QUERY, (err, result) => {
-				if (err) {
-					reject(err);
-				}
+	GetCPOs(data) {
+		const QUERY = `SELECT * FROM cpo_owners LIMIT ? OFFSET ?`;
 
-				resolve(result);
-			});
+		return new Promise((resolve, reject) => {
+			mysql.query(
+				QUERY,
+				[parseInt(data.limit), parseInt(data.offset)],
+				(err, result) => {
+					if (err) {
+						reject(err);
+					}
+
+					resolve(result);
+				}
+			);
 		});
 	}
 

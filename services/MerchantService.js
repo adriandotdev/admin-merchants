@@ -11,8 +11,8 @@ module.exports = class MerchantService {
 		this.#repository = new MerchantRepository();
 	}
 
-	async GetCPOs() {
-		const result = await this.#repository.GetCPOs();
+	async GetCPOs(data) {
+		const result = await this.#repository.GetCPOs(data);
 
 		return result;
 	}

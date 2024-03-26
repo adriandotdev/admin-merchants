@@ -33,13 +33,32 @@ module.exports = (app) => {
 	app.get(
 		"/admin_merchants/api/v1/merchants",
 		[AccessTokenVerifier],
+
+		/**
+		 *
+		 * @param {import('express').Request} req
+		 * @param {import('express').Response} res
+		 * @returns
+		 */
 		async (req, res) => {
 			try {
 				if (req.role !== "ADMIN")
 					throw new HttpUnauthorized("Unauthorized", []);
 
-				const result = await service.GetCPOs();
+				const { limit, offset } = req.query;
 
+				const result = await service.GetCPOs({
+					limit: limit || 10,
+					offset: offset || 0,
+				});
+
+				// There is a bug here
+				res.setHeader(
+					"X-Pagination",
+					`${req.url}?limit=${parseInt(limit) || 10}&offset=${
+						parseInt(offset) + 10
+					}`
+				);
 				return res
 					.status(200)
 					.json({ status: 200, data: result, message: "Success" });
