@@ -324,4 +324,78 @@ module.exports = (app) => {
 			}
 		}
 	);
+
+	app.post(
+		"/admin_merchants/api/v1/merchants/topup/:cpo_owner_id",
+		[AccessTokenVerifier],
+
+		/**
+		 * @param {import('express').Request} req
+		 * @param {import('express').Response} res
+		 */
+		async (req, res) => {
+			try {
+				const { cpo_owner_id } = req.params;
+				const { amount } = req.body;
+
+				logger.info({
+					CPO_TOPUP: {
+						cpo_owner_id: req.params.cpo_owner_id,
+						amount: req.body.amount,
+					},
+				});
+
+				const result = await service.Topup(cpo_owner_id, amount);
+
+				return res
+					.status(200)
+					.json({ status: 200, data: result, message: "Success" });
+			} catch (err) {
+				return res.status(err.status || 500).json({
+					status: err.status || 500,
+					data: err.data || [],
+					message: err.message || "Internal Server Error",
+				});
+			}
+		}
+	);
+
+	app.get(
+		"/admin_merchants/api/v1/merchants/topups/:cpo_owner_id",
+		[AccessTokenVerifier],
+
+		/**
+		 * @param {import('express').Request} req
+		 * @param {import('express').Response} res
+		 */
+		async (req, res) => {
+			try {
+				logger.info({
+					GET_TOPUP_LOGS: {
+						cpo_owner_id: req.params.cpo_owner_id,
+					},
+				});
+
+				const { cpo_owner_id } = req.params;
+
+				const result = await service.GetTopupByID(cpo_owner_id);
+
+				logger.info({
+					GET_TOPUP_LOGS_RESPONSE: {
+						message: "SUCCESS",
+					},
+				});
+
+				return res
+					.status(200)
+					.json({ status: 200, data: result, message: "Success" });
+			} catch (err) {
+				return res.status(err.status || 500).json({
+					status: err.status || 500,
+					data: err.data || [],
+					message: err.message || "Internal Server Error",
+				});
+			}
+		}
+	);
 };

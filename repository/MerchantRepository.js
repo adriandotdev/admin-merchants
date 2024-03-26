@@ -103,4 +103,39 @@ module.exports = class MerchantRepository {
 			});
 		});
 	}
+
+	Topup(cpoOwnerID, amount) {
+		const QUERY = `CALL WEB_ADMIN_TOPUP(?,?)`;
+
+		return new Promise((resolve, reject) => {
+			mysql.query(QUERY, [cpoOwnerID, amount], (err, result) => {
+				if (err) {
+					reject(err);
+				}
+
+				resolve(result);
+			});
+		});
+	}
+
+	GetTopupByID(cpoOwnerID) {
+		const QUERY = `SELECT *, DATE_ADD(topup_logs.date_created, INTERVAL 60 MINUTE) AS voidable_until
+		FROM topup_logs
+		INNER JOIN cpo_owners
+		ON cpo_owners.user_id = topup_logs.user_id
+		WHERE cpo_owners.id = ?
+		AND NOW() < DATE_ADD(topup_logs.date_created, INTERVAL 60 MINUTE) 
+		AND type = 'TOPUP'
+		AND void_id IS NULL`;
+
+		return new Promise((resolve, reject) => {
+			mysql.query(QUERY, [cpoOwnerID], (err, result) => {
+				if (err) {
+					reject(err);
+				}
+
+				resolve(result);
+			});
+		});
+	}
 };

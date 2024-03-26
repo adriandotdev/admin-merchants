@@ -96,4 +96,18 @@ module.exports = class MerchantService {
 
 		return status;
 	}
+
+	async Topup(cpoOwnerID, amount) {
+		const result = await this.#repository.Topup(cpoOwnerID, amount);
+
+		const status = result[0][0].STATUS;
+
+		return status;
+	}
+
+	async GetTopupByID(cpoOwnerID) {
+		const result = await this.#repository.GetTopupByID(cpoOwnerID);
+
+		return result;
+	}
 };
