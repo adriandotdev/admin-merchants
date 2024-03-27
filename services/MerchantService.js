@@ -93,7 +93,7 @@ module.exports = class MerchantService {
 
     if (updateResult.affectedRows > 0) return "SUCCESS";
 
-    return updateResult;
+    return "CPO_ID_DOES_NOT_EXISTS";
   }
 
   async AddRFID(cpoOwnerID, rfidCardTag) {
