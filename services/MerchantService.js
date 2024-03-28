@@ -118,4 +118,10 @@ module.exports = class MerchantService {
 
     return result;
   }
+
+  async VoidTopup(referenceID) {
+    const result = await this.#repository.VoidTopup(referenceID);
+
+    return result;
+  }
 };

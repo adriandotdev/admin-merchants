@@ -145,4 +145,18 @@ module.exports = class MerchantRepository {
       });
     });
   }
+
+  VoidTopup(referenceID) {
+    const QUERY = `CALL WEB_ADMIN_VOID_TOPUP(?)`;
+
+    return new Promise((resolve, reject) => {
+      mysql.query(QUERY, referenceID, (err, result) => {
+        if (err) {
+          reject(err);
+        }
+
+        resolve(result);
+      });
+    });
+  }
 };

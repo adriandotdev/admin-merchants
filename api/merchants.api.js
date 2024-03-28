@@ -398,4 +398,43 @@ module.exports = (app) => {
       }
     }
   );
+
+  app.post(
+    "/admin_merchants/api/v1/merchants/topups/void/:reference_id",
+    [AccessTokenVerifier],
+
+    /**
+     * @param {import('express').Request} req
+     * @param {import('express').Response} res
+     */
+    async (req, res) => {
+      try {
+        const { reference_id } = req.params;
+
+        logger.info({
+          VOID_TOPUP_REQUEST: {
+            reference_id,
+          },
+        });
+
+        logger.info({
+          VOID_TOPUP_RESPONSE: {
+            message: "Success",
+          },
+        });
+
+        const result = await service.VoidTopup(reference_id);
+
+        return res
+          .status(200)
+          .json({ status: 200, data: result, message: "Success" });
+      } catch (err) {
+        return res.status(err.status || 500).json({
+          status: err.status || 500,
+          data: err.data || [],
+          message: err.message || "Internal Server Error",
+        });
+      }
+    }
+  );
 };
