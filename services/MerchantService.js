@@ -93,13 +93,15 @@ module.exports = class MerchantService {
 
     if (updateResult.affectedRows > 0) return "SUCCESS";
 
-    return "CPO_ID_DOES_NOT_EXISTS";
+    throw new HttpBadRequest("CPO_ID_DOES_NOT_EXISTS", []);
   }
 
   async AddRFID(cpoOwnerID, rfidCardTag) {
     const result = await this.#repository.AddRFID(cpoOwnerID, rfidCardTag);
 
     const status = result[0][0].STATUS;
+
+    if (status !== "SUCCESS") throw new HttpBadRequest(status, []);
 
     return status;
   }
@@ -109,6 +111,8 @@ module.exports = class MerchantService {
 
     const status = result[0][0].STATUS;
     const new_balance = result[0][0].current_balance;
+
+    if (status !== "SUCCESS") throw new HttpBadRequest(status, []);
 
     return { status, new_balance };
   }
@@ -122,6 +126,12 @@ module.exports = class MerchantService {
   async VoidTopup(referenceID) {
     const result = await this.#repository.VoidTopup(referenceID);
 
-    return result;
+    const status = result[0][0].STATUS;
+    const current_balance = result[0][0].current_balance;
+    const reference_number = result[0][0].reference_number;
+
+    if (status !== "SUCCESS") throw new HttpBadRequest(status, []);
+
+    return { status, current_balance, reference_number };
   }
 };

@@ -42,6 +42,14 @@ module.exports = (app) => {
      */
     async (req, res) => {
       try {
+        logger.info({
+          GET_CPOS_REQUEST: {
+            role: req.role,
+            limit: req.query.limit,
+            offset: req.query.offset,
+          },
+        });
+
         if (req.role !== "ADMIN")
           throw new HttpUnauthorized("Unauthorized", []);
 
@@ -59,10 +67,23 @@ module.exports = (app) => {
             parseInt(offset) + 10
           }`
         );
+
+        logger.info({
+          GET_CPOS_RESPONSE: {
+            message: "Success",
+          },
+        });
+
         return res
           .status(200)
           .json({ status: 200, data: result, message: "Success" });
       } catch (err) {
+        logger.error({
+          GET_CPOS_ERROR: {
+            err,
+            message: err.message,
+          },
+        });
         return res.status(err.status || 500).json({
           status: err.status || 500,
           data: err.data || [],
@@ -118,6 +139,13 @@ module.exports = (app) => {
      */
     async (req, res) => {
       try {
+        logger.info({
+          REGISTER_CPO_REQUEST: {
+            role: req.role,
+            data: { ...req.body },
+          },
+        });
+
         if (req.role !== "ADMIN")
           throw new HttpUnauthorized("Unauthorized", []);
 
@@ -131,12 +159,6 @@ module.exports = (app) => {
           contact_email,
           username,
         } = req.body;
-
-        logger.info({
-          REGISTER_CPO_REQUEST: {
-            ...req.body,
-          },
-        });
 
         const result = await service.RegisterCPO({
           party_id,
@@ -152,10 +174,17 @@ module.exports = (app) => {
             message: "SUCCESS",
           },
         });
+
         return res
           .status(200)
           .json({ status: 200, data: result, message: "Success" });
       } catch (err) {
+        logger.error({
+          REGISTER_CPO_ERROR: {
+            err,
+            message: err.message,
+          },
+        });
         return res.status(err.status || 500).json({
           status: err.status || 500,
           data: err.data || [],
@@ -174,16 +203,17 @@ module.exports = (app) => {
      */
     async (req, res) => {
       try {
+        logger.info({
+          SEARCH_CPO_BY_NAME_REQUEST: {
+            role: req.role,
+            cpo_owner_name,
+          },
+        });
+
         if (req.role !== "ADMIN")
           throw new HttpUnauthorized("Unauthorized", []);
 
         const { cpo_owner_name } = req.params;
-
-        logger.info({
-          SEARCH_CPO_BY_NAME_REQUEST: {
-            cpo_owner_name,
-          },
-        });
 
         const result = await service.SearchCPOByName(cpo_owner_name);
 
@@ -197,6 +227,12 @@ module.exports = (app) => {
           .status(200)
           .json({ status: 200, data: result, message: "Success" });
       } catch (err) {
+        logger.info({
+          SEARCH_CPO_BY_NAME_ERROR: {
+            err,
+            message: err.message,
+          },
+        });
         return res.status(err.status || 500).json({
           status: err.status || 500,
           data: err.data || [],
@@ -252,6 +288,7 @@ module.exports = (app) => {
       try {
         logger.info({
           UPDATE_CPO_BY_ID_REQUEST: {
+            role: req.role,
             id: req.params.id,
             ...req.body,
           },
@@ -276,6 +313,12 @@ module.exports = (app) => {
           .status(200)
           .json({ status: 200, data: result, message: "Success" });
       } catch (err) {
+        logger.error({
+          UPDATE_CPO_BY_ID_ERROR: {
+            err,
+            message: err.message,
+          },
+        });
         return res.status(err.status || 500).json({
           status: err.status || 500,
           data: err.data || [],
@@ -299,10 +342,14 @@ module.exports = (app) => {
 
         logger.info({
           ADD_RFID_REQUEST: {
+            role: req.role,
             cpo_owner_id,
             rfid_card_tag,
           },
         });
+
+        if (req.role !== "ADMIN")
+          throw new HttpUnauthorized("Unauthorized", []);
 
         const result = await service.AddRFID(cpo_owner_id, rfid_card_tag);
 
@@ -316,6 +363,12 @@ module.exports = (app) => {
           .status(200)
           .json({ status: 200, data: result, message: "Success" });
       } catch (err) {
+        logger.error({
+          ADD_RFID_ERROR: {
+            err,
+            message: err.message,
+          },
+        });
         return res.status(err.status || 500).json({
           status: err.status || 500,
           data: err.data || [],
@@ -339,18 +392,33 @@ module.exports = (app) => {
         const { amount } = req.body;
 
         logger.info({
-          CPO_TOPUP: {
-            cpo_owner_id: req.params.cpo_owner_id,
-            amount: req.body.amount,
+          TOPUP_TO_CPO_REQUEST: {
+            role: req.role,
+            cpo_owner_id,
+            amount,
           },
         });
 
+        if (req.role !== "ADMIN")
+          throw new HttpUnauthorized("Unauthorized", []);
+
         const result = await service.Topup(cpo_owner_id, amount);
 
+        logger.info({
+          TOPUP_TO_CPO_RESPONSE: {
+            message: "SUCCESS",
+          },
+        });
         return res
           .status(200)
           .json({ status: 200, data: result, message: "Success" });
       } catch (err) {
+        logger.error({
+          TOPUP_TO_CPO_RESPONSE: {
+            err,
+            message: err.message,
+          },
+        });
         return res.status(err.status || 500).json({
           status: err.status || 500,
           data: err.data || [],
@@ -370,13 +438,17 @@ module.exports = (app) => {
      */
     async (req, res) => {
       try {
+        const { cpo_owner_id } = req.params;
+
         logger.info({
           GET_TOPUP_LOGS: {
-            cpo_owner_id: req.params.cpo_owner_id,
+            role: req.role,
+            cpo_owner_id,
           },
         });
 
-        const { cpo_owner_id } = req.params;
+        if (req.role !== "ADMIN")
+          throw new HttpUnauthorized("Unauthorized", []);
 
         const result = await service.GetTopupByID(cpo_owner_id);
 
@@ -390,6 +462,12 @@ module.exports = (app) => {
           .status(200)
           .json({ status: 200, data: result, message: "Success" });
       } catch (err) {
+        logger.error({
+          GET_TOPUP_LOGS_ERROR: {
+            err,
+            message: err.message,
+          },
+        });
         return res.status(err.status || 500).json({
           status: err.status || 500,
           data: err.data || [],
@@ -417,18 +495,26 @@ module.exports = (app) => {
           },
         });
 
+        if (req.role !== "ADMIN")
+          throw new HttpUnauthorized("Unauthorized", []);
+
+        const result = await service.VoidTopup(reference_id);
+
         logger.info({
           VOID_TOPUP_RESPONSE: {
             message: "Success",
           },
         });
-
-        const result = await service.VoidTopup(reference_id);
-
         return res
           .status(200)
           .json({ status: 200, data: result, message: "Success" });
       } catch (err) {
+        logger.error({
+          VOID_TOPUP_ERROR: {
+            err,
+            message: err.message,
+          },
+        });
         return res.status(err.status || 500).json({
           status: err.status || 500,
           data: err.data || [],
