@@ -108,8 +108,9 @@ module.exports = class MerchantService {
     const result = await this.#repository.Topup(cpoOwnerID, amount);
 
     const status = result[0][0].STATUS;
+    const new_balance = result[0][0].current_balance;
 
-    return status;
+    return { status, new_balance };
   }
 
   async GetTopupByID(cpoOwnerID) {
