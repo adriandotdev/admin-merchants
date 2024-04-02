@@ -1,4 +1,8 @@
 const { AccessTokenVerifier } = require("../middlewares/TokenMiddleware");
+const {
+	ROLES,
+	RoleManagementMiddleware,
+} = require("../middlewares/RoleManagementMiddleware");
 const MerchantService = require("../services/MerchantService");
 const {
 	HttpUnauthorized,
@@ -12,7 +16,7 @@ const { validationResult, body } = require("express-validator");
  */
 module.exports = (app) => {
 	const service = new MerchantService();
-
+	const rolesMiddleware = new RoleManagementMiddleware();
 	/**
 	 * This function will be used by the express-validator for input validation,
 	 * and to be attached to APIs middleware.
@@ -32,13 +36,14 @@ module.exports = (app) => {
 
 	app.get(
 		"/admin_merchants/api/v1/merchants",
-		[AccessTokenVerifier],
+		[
+			AccessTokenVerifier,
+			rolesMiddleware.CheckRole(ROLES.ADMIN, ROLES.ADMIN_MARKETING),
+		],
 
 		/**
-		 *
 		 * @param {import('express').Request} req
 		 * @param {import('express').Response} res
-		 * @returns
 		 */
 		async (req, res) => {
 			try {
@@ -49,9 +54,6 @@ module.exports = (app) => {
 						offset: req.query.offset,
 					},
 				});
-
-				if (req.role !== "ADMIN")
-					throw new HttpUnauthorized("Unauthorized", []);
 
 				const { limit, offset } = req.query;
 
