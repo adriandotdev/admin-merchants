@@ -12,10 +12,15 @@ const AccountRepository = require("../repository/AccountRepository");
 module.exports = class TokenMiddleware {
 	#repository;
 
+	/**
+	 * @constructor
+	 */
 	constructor() {
 		this.#repository = new AccountRepository();
 	}
-
+	/**
+	 * @method AccessTokenVerifier
+	 */
 	AccessTokenVerifier() {
 		/**
 		 * @param {import('express').Request} req
@@ -101,6 +106,9 @@ module.exports = class TokenMiddleware {
 		};
 	}
 
+	/**
+	 * @method
+	 */
 	RefreshTokenVerifier() {
 		/**
 		 * @param {import('express').Request} req
@@ -198,6 +206,9 @@ module.exports = class TokenMiddleware {
 		};
 	}
 
+	/**
+	 * @method
+	 */
 	BasicTokenVerifier() {
 		/**
 		 * @param {import('express').Request} req
