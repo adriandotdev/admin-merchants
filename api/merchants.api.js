@@ -1,4 +1,4 @@
-const { AccessTokenVerifier } = require("../middlewares/TokenMiddleware");
+const TokenMiddleware = require("../middlewares/TokenMiddleware");
 const {
 	ROLES,
 	RoleManagementMiddleware,
@@ -16,6 +16,7 @@ const { validationResult, body } = require("express-validator");
  */
 module.exports = (app) => {
 	const service = new MerchantService();
+	const tokenMiddleware = new TokenMiddleware();
 	const rolesMiddleware = new RoleManagementMiddleware();
 	/**
 	 * This function will be used by the express-validator for input validation,
@@ -37,7 +38,7 @@ module.exports = (app) => {
 	app.get(
 		"/admin_merchants/api/v1/merchants",
 		[
-			AccessTokenVerifier,
+			tokenMiddleware.AccessTokenVerifier(),
 			rolesMiddleware.CheckRole(ROLES.ADMIN, ROLES.ADMIN_MARKETING),
 		],
 
@@ -98,7 +99,7 @@ module.exports = (app) => {
 	app.post(
 		"/admin_merchants/api/v1/merchants",
 		[
-			AccessTokenVerifier,
+			tokenMiddleware.AccessTokenVerifier(),
 			body("party_id")
 				.notEmpty()
 				.withMessage("Missing required property: party_id")
@@ -198,7 +199,7 @@ module.exports = (app) => {
 
 	app.get(
 		"/admin_merchants/api/v1/merchants/:cpo_owner_name",
-		[AccessTokenVerifier],
+		[tokenMiddleware.AccessTokenVerifier()],
 		/**
 		 * @param {import('express').Request} req
 		 * @param {import('express').Response} res
@@ -247,7 +248,7 @@ module.exports = (app) => {
 	app.patch(
 		"/admin_merchants/api/v1/merchants/:id",
 		[
-			AccessTokenVerifier,
+			tokenMiddleware.AccessTokenVerifier(),
 			body("cpo_owner_name")
 				.optional()
 				.notEmpty()
@@ -332,7 +333,7 @@ module.exports = (app) => {
 
 	app.post(
 		"/admin_merchants/api/v1/merchants/rfid/:cpo_owner_id/:rfid_card_tag",
-		[AccessTokenVerifier],
+		[tokenMiddleware.AccessTokenVerifier()],
 
 		/**
 		 * @param {import('express').Request} req
@@ -382,7 +383,7 @@ module.exports = (app) => {
 
 	app.post(
 		"/admin_merchants/api/v1/merchants/topup/:cpo_owner_id",
-		[AccessTokenVerifier],
+		[tokenMiddleware.AccessTokenVerifier()],
 
 		/**
 		 * @param {import('express').Request} req
@@ -432,7 +433,7 @@ module.exports = (app) => {
 
 	app.get(
 		"/admin_merchants/api/v1/merchants/topups/:cpo_owner_id",
-		[AccessTokenVerifier],
+		[tokenMiddleware.AccessTokenVerifier()],
 
 		/**
 		 * @param {import('express').Request} req
@@ -481,7 +482,7 @@ module.exports = (app) => {
 
 	app.post(
 		"/admin_merchants/api/v1/merchants/topups/void/:reference_id",
-		[AccessTokenVerifier],
+		[tokenMiddleware.AccessTokenVerifier()],
 
 		/**
 		 * @param {import('express').Request} req
