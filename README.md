@@ -1,5 +1,9 @@
 # Admin Merchants API
 
+## URL
+
+`https://services-parkncharge.sysnetph.com/admin_merchants`
+
 ## APIs
 
 ### GET CPO Owners - `GET /api/v1/merchants?limit=10&offset=0`
