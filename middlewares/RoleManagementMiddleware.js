@@ -1,10 +1,12 @@
 const logger = require("../config/winston");
 
 const ROLES = {
+	ADMIN_NOC: "ADMIN_NOC",
 	ADMIN: "ADMIN",
 	CPO_OWNER: "CPO_OWNER",
 	USER_DRIVER: "USER_DRIVER",
 	ADMIN_MARKETING: "ADMIN_MARKETING",
+	ADMIN_ACCOUNTING: "ADMIN_ACCOUNTING",
 };
 
 /**

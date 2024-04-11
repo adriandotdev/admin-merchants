@@ -39,7 +39,11 @@ module.exports = (app) => {
 		"/admin_merchants/api/v1/merchants",
 		[
 			tokenMiddleware.AccessTokenVerifier(),
-			rolesMiddleware.CheckRole(ROLES.ADMIN, ROLES.ADMIN_MARKETING),
+			rolesMiddleware.CheckRole(
+				ROLES.ADMIN,
+				ROLES.ADMIN_NOC,
+				ROLES.ADMIN_MARKETING
+			),
 		],
 
 		/**
@@ -100,6 +104,11 @@ module.exports = (app) => {
 		"/admin_merchants/api/v1/merchants",
 		[
 			tokenMiddleware.AccessTokenVerifier(),
+			rolesMiddleware.CheckRole(
+				ROLES.ADMIN,
+				ROLES.ADMIN_NOC,
+				ROLES.ADMIN_MARKETING
+			),
 			body("party_id")
 				.notEmpty()
 				.withMessage("Missing required property: party_id")
@@ -149,9 +158,6 @@ module.exports = (app) => {
 					},
 				});
 
-				if (req.role !== "ADMIN")
-					throw new HttpUnauthorized("Unauthorized", []);
-
 				validate(req, res);
 
 				const {
@@ -199,7 +205,14 @@ module.exports = (app) => {
 
 	app.get(
 		"/admin_merchants/api/v1/merchants/:cpo_owner_name",
-		[tokenMiddleware.AccessTokenVerifier()],
+		[
+			tokenMiddleware.AccessTokenVerifier(),
+			rolesMiddleware.CheckRole(
+				ROLES.ADMIN,
+				ROLES.ADMIN_NOC,
+				ROLES.ADMIN_MARKETING
+			),
+		],
 		/**
 		 * @param {import('express').Request} req
 		 * @param {import('express').Response} res
@@ -212,9 +225,6 @@ module.exports = (app) => {
 						cpo_owner_name: req.params.cpo_owner_name,
 					},
 				});
-
-				if (req.role !== "ADMIN")
-					throw new HttpUnauthorized("Unauthorized", []);
 
 				const { cpo_owner_name } = req.params;
 
@@ -249,6 +259,11 @@ module.exports = (app) => {
 		"/admin_merchants/api/v1/merchants/:id",
 		[
 			tokenMiddleware.AccessTokenVerifier(),
+			rolesMiddleware.CheckRole(
+				ROLES.ADMIN,
+				ROLES.ADMIN_NOC,
+				ROLES.ADMIN_MARKETING
+			),
 			body("cpo_owner_name")
 				.optional()
 				.notEmpty()
@@ -297,9 +312,6 @@ module.exports = (app) => {
 					},
 				});
 
-				if (req.role !== "ADMIN")
-					throw new HttpUnauthorized("Unauthorized", []);
-
 				validate(req, res);
 
 				const result = await service.UpdateCPOByID({
@@ -333,7 +345,14 @@ module.exports = (app) => {
 
 	app.post(
 		"/admin_merchants/api/v1/merchants/rfid/:cpo_owner_id/:rfid_card_tag",
-		[tokenMiddleware.AccessTokenVerifier()],
+		[
+			tokenMiddleware.AccessTokenVerifier(),
+			rolesMiddleware.CheckRole(
+				ROLES.ADMIN,
+				ROLES.ADMIN_NOC,
+				ROLES.ADMIN_MARKETING
+			),
+		],
 
 		/**
 		 * @param {import('express').Request} req
@@ -350,9 +369,6 @@ module.exports = (app) => {
 						rfid_card_tag,
 					},
 				});
-
-				if (req.role !== "ADMIN")
-					throw new HttpUnauthorized("Unauthorized", []);
 
 				const result = await service.AddRFID(cpo_owner_id, rfid_card_tag);
 
@@ -383,7 +399,14 @@ module.exports = (app) => {
 
 	app.post(
 		"/admin_merchants/api/v1/merchants/topup/:cpo_owner_id",
-		[tokenMiddleware.AccessTokenVerifier()],
+		[
+			tokenMiddleware.AccessTokenVerifier(),
+			rolesMiddleware.CheckRole(
+				ROLES.ADMIN,
+				ROLES.ADMIN_NOC,
+				ROLES.ADMIN_MARKETING
+			),
+		],
 
 		/**
 		 * @param {import('express').Request} req
@@ -401,9 +424,6 @@ module.exports = (app) => {
 						amount,
 					},
 				});
-
-				if (req.role !== "ADMIN")
-					throw new HttpUnauthorized("Unauthorized", []);
 
 				const result = await service.Topup(cpo_owner_id, amount);
 
@@ -433,7 +453,14 @@ module.exports = (app) => {
 
 	app.get(
 		"/admin_merchants/api/v1/merchants/topups/:cpo_owner_id",
-		[tokenMiddleware.AccessTokenVerifier()],
+		[
+			tokenMiddleware.AccessTokenVerifier(),
+			rolesMiddleware.CheckRole(
+				ROLES.ADMIN,
+				ROLES.ADMIN_NOC,
+				ROLES.ADMIN_MARKETING
+			),
+		],
 
 		/**
 		 * @param {import('express').Request} req
@@ -449,9 +476,6 @@ module.exports = (app) => {
 						cpo_owner_id,
 					},
 				});
-
-				if (req.role !== "ADMIN")
-					throw new HttpUnauthorized("Unauthorized", []);
 
 				const result = await service.GetTopupByID(cpo_owner_id);
 
@@ -482,7 +506,14 @@ module.exports = (app) => {
 
 	app.post(
 		"/admin_merchants/api/v1/merchants/topups/void/:reference_id",
-		[tokenMiddleware.AccessTokenVerifier()],
+		[
+			tokenMiddleware.AccessTokenVerifier(),
+			rolesMiddleware.CheckRole(
+				ROLES.ADMIN,
+				ROLES.ADMIN_NOC,
+				ROLES.ADMIN_MARKETING
+			),
+		],
 
 		/**
 		 * @param {import('express').Request} req
@@ -497,9 +528,6 @@ module.exports = (app) => {
 						reference_id,
 					},
 				});
-
-				if (req.role !== "ADMIN")
-					throw new HttpUnauthorized("Unauthorized", []);
 
 				const result = await service.VoidTopup(reference_id);
 
