@@ -126,7 +126,7 @@ module.exports = class MerchantRepository {
 	}
 
 	GetTopupByID(cpoOwnerID) {
-		const QUERY = `SELECT *, topup_logs.id, DATE_ADD(topup_logs.date_created, INTERVAL 60 MINUTE) AS voidable_until
+		const QUERY = `SELECT topup_logs.*, topup_logs.id, DATE_ADD(topup_logs.date_created, INTERVAL 60 MINUTE) AS voidable_until
 		FROM topup_logs
 		INNER JOIN cpo_owners
 		ON cpo_owners.user_id = topup_logs.user_id

@@ -5,133 +5,135 @@ const { HttpBadRequest } = require("../utils/HttpError");
 const Email = require("../utils/Email");
 
 module.exports = class MerchantService {
-  #repository;
+	#repository;
 
-  constructor() {
-    this.#repository = new MerchantRepository();
-  }
+	constructor() {
+		this.#repository = new MerchantRepository();
+	}
 
-  async GetCPOs(data) {
-    const result = await this.#repository.GetCPOs(data);
+	async GetCPOs(data) {
+		const result = await this.#repository.GetCPOs(data);
 
-    return result;
-  }
+		return result;
+	}
 
-  async RegisterCPO(data) {
-    const password = generator.generate({ length: 10, numbers: false });
-    const username = data.username;
+	async RegisterCPO(data) {
+		const password = generator.generate({ length: 10, numbers: false });
+		const username = data.username;
 
-    const email = new Email(data.contact_email, { username, password });
+		const email = new Email(data.contact_email, { username, password });
 
-    // await email.SendUsernameAndPassword();
+		// await email.SendUsernameAndPassword();
 
-    const result = await this.#repository.RegisterCPO({ ...data, password });
+		const result = await this.#repository.RegisterCPO({ ...data, password });
 
-    const status = result[0][0].STATUS;
+		const status = result[0][0].STATUS;
 
-    if (status !== "SUCCESS") throw new HttpBadRequest("Bad Request", status);
+		if (status !== "SUCCESS") throw new HttpBadRequest("Bad Request", status);
 
-    return status;
-  }
+		return status;
+	}
 
-  /**
-   * @param {String} cpoOwnerName
-   * @returns
-   */
-  async SearchCPOByName(cpoOwnerName) {
-    // Check if it is empty, then return all of the lists
-    if (cpoOwnerName === ":cpo_owner_name") {
-      const result = await this.#repository.GetCPOs({ limit: 10, offset: 0 });
+	/**
+	 * @param {String} cpoOwnerName
+	 * @returns
+	 */
+	async SearchCPOByName(cpoOwnerName) {
+		// Check if it is empty, then return all of the lists
+		if (cpoOwnerName === ":cpo_owner_name") {
+			const result = await this.#repository.GetCPOs({ limit: 10, offset: 0 });
 
-      return result;
-    }
+			return result;
+		}
 
-    const result = await this.#repository.SearchCPOByName(
-      cpoOwnerName.toLowerCase()
-    );
+		const result = await this.#repository.SearchCPOByName(
+			cpoOwnerName.toLowerCase()
+		);
 
-    return result;
-  }
+		return result;
+	}
 
-  async UpdateCPOByID({ id, data }) {
-    const VALID_INPUTS = [
-      "cpo_owner_name",
-      "contact_name",
-      "contact_number",
-      "contact_email",
-      "username",
-    ];
+	async UpdateCPOByID({ id, data }) {
+		const VALID_INPUTS = [
+			"cpo_owner_name",
+			"contact_name",
+			"contact_number",
+			"contact_email",
+			"username",
+		];
 
-    if (!Object.keys(data).every((value) => VALID_INPUTS.includes(value)))
-      throw new HttpBadRequest(`Valid inputs are: ${VALID_INPUTS.join(", ")}`);
+		if (!Object.keys(data).every((value) => VALID_INPUTS.includes(value)))
+			throw new HttpBadRequest(`Valid inputs are: ${VALID_INPUTS.join(", ")}`);
 
-    if (Object.keys(data).length === 0) {
-      // Check if data object is empty
-      return "NO_CHANGES_APPLIED";
-    }
+		if (Object.keys(data).length === 0) {
+			// Check if data object is empty
+			return "NO_CHANGES_APPLIED";
+		}
 
-    let newData = {};
+		let newData = {};
 
-    // Encrypt all of the updated data except the username.
-    Object.keys(data).forEach((key) => {
-      newData[key] = data[key];
-    });
+		// Encrypt all of the updated data except the username.
+		Object.keys(data).forEach((key) => {
+			newData[key] = data[key];
+		});
 
-    // Setting up the query
-    let query = "SET";
+		// Setting up the query
+		let query = "SET";
 
-    const dataEntries = Object.entries(newData);
+		const dataEntries = Object.entries(newData);
 
-    for (const [key, value] of dataEntries) {
-      query += ` ${key} = '${value}',`;
-    }
+		for (const [key, value] of dataEntries) {
+			query += ` ${key} = '${value}',`;
+		}
 
-    const updateResult = await this.#repository.UpdateCPOByID({
-      id,
-      query: query.slice(0, query.length - 1),
-    });
+		const updateResult = await this.#repository.UpdateCPOByID({
+			id,
+			query: query.slice(0, query.length - 1),
+		});
 
-    if (updateResult.affectedRows > 0) return "SUCCESS";
+		if (updateResult.affectedRows > 0) return "SUCCESS";
 
-    throw new HttpBadRequest("CPO_ID_DOES_NOT_EXISTS", []);
-  }
+		throw new HttpBadRequest("CPO_ID_DOES_NOT_EXISTS", []);
+	}
 
-  async AddRFID(cpoOwnerID, rfidCardTag) {
-    const result = await this.#repository.AddRFID(cpoOwnerID, rfidCardTag);
+	async AddRFID(cpoOwnerID, rfidCardTag) {
+		const result = await this.#repository.AddRFID(cpoOwnerID, rfidCardTag);
 
-    const status = result[0][0].STATUS;
+		const status = result[0][0].STATUS;
 
-    if (status !== "SUCCESS") throw new HttpBadRequest(status, []);
+		if (status !== "SUCCESS") throw new HttpBadRequest(status, []);
 
-    return status;
-  }
+		return status;
+	}
 
-  async Topup(cpoOwnerID, amount) {
-    const result = await this.#repository.Topup(cpoOwnerID, amount);
+	async Topup(cpoOwnerID, amount) {
+		if (amount <= 0) throw new HttpBadRequest("INVALID_AMOUNT", []);
 
-    const status = result[0][0].STATUS;
-    const new_balance = result[0][0].current_balance;
+		const result = await this.#repository.Topup(cpoOwnerID, amount);
 
-    if (status !== "SUCCESS") throw new HttpBadRequest(status, []);
+		const status = result[0][0].STATUS;
+		const new_balance = result[0][0].current_balance;
 
-    return { status, new_balance };
-  }
+		if (status !== "SUCCESS") throw new HttpBadRequest(status, []);
 
-  async GetTopupByID(cpoOwnerID) {
-    const result = await this.#repository.GetTopupByID(cpoOwnerID);
+		return { status, new_balance };
+	}
 
-    return result;
-  }
+	async GetTopupByID(cpoOwnerID) {
+		const result = await this.#repository.GetTopupByID(cpoOwnerID);
 
-  async VoidTopup(referenceID) {
-    const result = await this.#repository.VoidTopup(referenceID);
+		return result;
+	}
 
-    const status = result[0][0].STATUS;
-    const current_balance = result[0][0].current_balance;
-    const reference_number = result[0][0].reference_number;
+	async VoidTopup(referenceID) {
+		const result = await this.#repository.VoidTopup(referenceID);
 
-    if (status !== "SUCCESS") throw new HttpBadRequest(status, []);
+		const status = result[0][0].STATUS;
+		const current_balance = result[0][0].current_balance;
+		const reference_number = result[0][0].reference_number;
 
-    return { status, current_balance, reference_number };
-  }
+		if (status !== "SUCCESS") throw new HttpBadRequest(status, []);
+
+		return { status, current_balance, reference_number };
+	}
 };
