@@ -35,7 +35,7 @@ module.exports = class MerchantService {
 	}
 
 	async CheckRegisterCPO(type, value) {
-		if (type === "username" && !String(value).match(/^[a-zA-Z0-9]+$/))
+		if (type === "username" && !String(value).match(/^[a-zA-Z0-9_]+$/))
 			throw new HttpBadRequest(
 				"INVALID_USERNAME: Username must only contains letters, numbers, and underscores"
 			);
