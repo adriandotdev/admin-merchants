@@ -58,6 +58,20 @@ module.exports = class MerchantRepository {
 		});
 	}
 
+	CheckRegisterCPO(type, value) {
+		const QUERY = `CALL WEB_ADMIN_CHECK_REGISTER_CPO(?,?)`;
+
+		return new Promise((resolve, reject) => {
+			mysql.query(QUERY, [type, value], (err, result) => {
+				if (err) {
+					reject(err);
+				}
+
+				resolve(result);
+			});
+		});
+	}
+
 	/**
 	 * @param {String} cpoOwnerName
 	 * @returns {Promise<Object>}
