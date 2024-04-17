@@ -7,6 +7,7 @@ const MerchantService = require("../services/MerchantService");
 const {
 	HttpUnauthorized,
 	HttpUnprocessableEntity,
+	HttpBadRequest,
 } = require("../utils/HttpError");
 
 const logger = require("../config/winston");
@@ -194,6 +195,54 @@ module.exports = (app) => {
 						message: err.message,
 					},
 				});
+				return res.status(err.status || 500).json({
+					status: err.status || 500,
+					data: err.data || [],
+					message: err.message || "Internal Server Error",
+				});
+			}
+		}
+	);
+
+	app.get(
+		"/admin_merchants/api/v1/merchants/check/:type/:value",
+		[
+			tokenMiddleware.AccessTokenVerifier(),
+			rolesMiddleware.CheckRole(
+				ROLES.ADMIN,
+				ROLES.ADMIN_NOC,
+				ROLES.ADMIN_MARKETING
+			),
+		],
+
+		/**
+		 * @param {import('express').Request} req
+		 * @param {import('express').Response} res
+		 */
+		async (req, res) => {
+			try {
+				const { type, value } = req.params;
+
+				const VALID_TYPES = ["username", "contact_number", "contact_email"];
+
+				if (!VALID_TYPES.includes(type))
+					throw new HttpBadRequest(
+						"INVALID_TYPE: Valid types are username, contact_number, and contact_email"
+					);
+
+				const result = await service.CheckRegisterCPO(type, value);
+
+				return res
+					.status(200)
+					.json({ status: 200, data: result, message: "Success" });
+			} catch (err) {
+				logger.error({
+					CHECK_IF_VALUE_EXISTS_ERROR: {
+						err,
+						message: err.message,
+					},
+				});
+
 				return res.status(err.status || 500).json({
 					status: err.status || 500,
 					data: err.data || [],

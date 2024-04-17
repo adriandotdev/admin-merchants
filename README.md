@@ -82,6 +82,43 @@ Registers new Charging Point Operator
 
 ---
 
+### CHECK Register CPO - `GET /api/v1/merchants/check/:type/:value`
+
+**Description**
+
+Checks if value exists in the database.
+
+**Parameters**
+
+- **type**
+  - Data you want to check. Valid types are: ['username', 'contact_number', 'contact_email']
+  - Type: String
+- **value**
+  - Data to check
+  - Type: String
+
+**Response**
+
+```json
+{
+	"status": 200,
+	"data": "SUCCESS",
+	"message": "Success"
+}
+```
+
+**Errors**
+
+- **INVALID_TYPE: Valid types are username, contact_number, and contact_email**
+- **INVALID_USERNAME: Username must only contains letters, numbers, and underscores**
+- **INVALID_CONTACT_NUMBER: Contact number must be a valid number. (E.g. +639112231123 or 09112231123)**
+- **INVALID_CONTACT_EMAIL: Contact email must be a valid email. (E.g. email@gmail.com)**
+- **CONTACT_NUMBER_DOES_EXISTS**
+- **CONTACT_EMAIL_DOES_EXISTS**
+- **USERNAME_DOES_EXISTS**
+
+---
+
 ### SEARCH CPO by Name - `/api/v1/merchants/:cpo_owner_name`
 
 **Description**
