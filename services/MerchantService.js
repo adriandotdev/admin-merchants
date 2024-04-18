@@ -37,7 +37,8 @@ module.exports = class MerchantService {
 	async CheckRegisterCPO(type, value) {
 		if (type === "username" && !String(value).match(/^[a-zA-Z0-9_]+$/))
 			throw new HttpBadRequest(
-				"INVALID_USERNAME: Username must only contains letters, numbers, and underscores"
+				"INVALID_USERNAME",
+				"Username must only contains letters, numbers, and underscores"
 			);
 
 		if (
@@ -45,7 +46,8 @@ module.exports = class MerchantService {
 			!String(value).match(/^(?:\+639|09)\d{9}$/)
 		)
 			throw new HttpBadRequest(
-				"INVALID_CONTACT_NUMBER: Contact number must be a valid number. (E.g. +639112231123 or 09112231123)"
+				"INVALID_CONTACT_NUMBER",
+				"Contact number must be a valid number. (E.g. +639112231123 or 09112231123)"
 			);
 
 		if (
@@ -53,7 +55,8 @@ module.exports = class MerchantService {
 			!String(value).match(/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,})+$/)
 		)
 			throw new HttpBadRequest(
-				"INVALID_CONTACT_EMAIL: Contact email must be a valid email. (E.g. email@gmail.com)"
+				"INVALID_CONTACT_EMAIL",
+				"Contact email must be a valid email. (E.g. email@gmail.com)"
 			);
 
 		const result = await this.#repository.CheckRegisterCPO(type, value);
