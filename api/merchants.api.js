@@ -51,7 +51,7 @@ module.exports = (app) => {
 		 * @param {import('express').Request} req
 		 * @param {import('express').Response} res
 		 */
-		async (req, res) => {
+		async (req, res, next) => {
 			try {
 				logger.info({
 					GET_CPOS_REQUEST: {
@@ -86,17 +86,8 @@ module.exports = (app) => {
 					.status(200)
 					.json({ status: 200, data: result, message: "Success" });
 			} catch (err) {
-				logger.error({
-					GET_CPOS_ERROR: {
-						err,
-						message: err.message,
-					},
-				});
-				return res.status(err.status || 500).json({
-					status: err.status || 500,
-					data: err.data || [],
-					message: err.message || "Internal Server Error",
-				});
+				req.error_name = "GET_CPOS_ERROR";
+				next(err);
 			}
 		}
 	);
@@ -150,7 +141,7 @@ module.exports = (app) => {
 		 * @param {import('express').Request} req
 		 * @param {import('express').Response} res
 		 */
-		async (req, res) => {
+		async (req, res, next) => {
 			try {
 				logger.info({
 					REGISTER_CPO_REQUEST: {
@@ -189,17 +180,8 @@ module.exports = (app) => {
 					.status(200)
 					.json({ status: 200, data: result, message: "Success" });
 			} catch (err) {
-				logger.error({
-					REGISTER_CPO_ERROR: {
-						err,
-						message: err.message,
-					},
-				});
-				return res.status(err.status || 500).json({
-					status: err.status || 500,
-					data: err.data || [],
-					message: err.message || "Internal Server Error",
-				});
+				req.error_name = "REGISTER_CPO_ERROR";
+				next(err);
 			}
 		}
 	);
@@ -219,11 +201,22 @@ module.exports = (app) => {
 		 * @param {import('express').Request} req
 		 * @param {import('express').Response} res
 		 */
-		async (req, res) => {
+		async (req, res, next) => {
 			try {
 				const { type, value } = req.params;
 
 				const VALID_TYPES = ["username", "contact_number", "contact_email"];
+
+				logger.info({
+					CHECK_REGISTER_CPO_REQUEST: {
+						data: {
+							role: req.role,
+							type,
+							value,
+						},
+					},
+					message: "SUCCESS",
+				});
 
 				if (!VALID_TYPES.includes(type))
 					throw new HttpBadRequest(
@@ -232,22 +225,18 @@ module.exports = (app) => {
 
 				const result = await service.CheckRegisterCPO(type, value);
 
+				logger.info({
+					CHECK_REGISTER_CPO_RESPONSE: {
+						message: "SUCCESS",
+					},
+				});
+
 				return res
 					.status(200)
 					.json({ status: 200, data: result, message: "Success" });
 			} catch (err) {
-				logger.error({
-					CHECK_IF_VALUE_EXISTS_ERROR: {
-						err,
-						message: err.message,
-					},
-				});
-
-				return res.status(err.status || 500).json({
-					status: err.status || 500,
-					data: err.data || [],
-					message: err.message || "Internal Server Error",
-				});
+				req.error_name = "CHECK_REGISTER_CPO_ERROR";
+				next(err);
 			}
 		}
 	);
@@ -266,16 +255,19 @@ module.exports = (app) => {
 		 * @param {import('express').Request} req
 		 * @param {import('express').Response} res
 		 */
-		async (req, res) => {
+		async (req, res, next) => {
 			try {
+				const { cpo_owner_name } = req.params;
+
 				logger.info({
 					SEARCH_CPO_BY_NAME_REQUEST: {
-						role: req.role,
-						cpo_owner_name: req.params.cpo_owner_name,
+						data: {
+							role: req.role,
+							cpo_owner_name: req.params.cpo_owner_name,
+						},
+						message: "SUCCESS",
 					},
 				});
-
-				const { cpo_owner_name } = req.params;
 
 				const result = await service.SearchCPOByName(cpo_owner_name);
 
@@ -289,17 +281,8 @@ module.exports = (app) => {
 					.status(200)
 					.json({ status: 200, data: result, message: "Success" });
 			} catch (err) {
-				logger.error({
-					SEARCH_CPO_BY_NAME_ERROR: {
-						err,
-						message: err.message,
-					},
-				});
-				return res.status(err.status || 500).json({
-					status: err.status || 500,
-					data: err.data || [],
-					message: err.message || "Internal Server Error",
-				});
+				req.error_name = "SEARCH_CPO_BY_NAME_ERROR";
+				next(err);
 			}
 		}
 	);
@@ -351,13 +334,16 @@ module.exports = (app) => {
 		 * @param {import('express').Request} req
 		 * @param {import('express').Response} res
 		 */
-		async (req, res) => {
+		async (req, res, next) => {
 			try {
 				logger.info({
 					UPDATE_CPO_BY_ID_REQUEST: {
-						role: req.role,
-						id: req.params.id,
-						...req.body,
+						data: {
+							role: req.role,
+							id: req.params.id,
+							...req.body,
+						},
+						message: "SUCCESS",
 					},
 				});
 
@@ -377,17 +363,8 @@ module.exports = (app) => {
 					.status(200)
 					.json({ status: 200, data: result, message: "Success" });
 			} catch (err) {
-				logger.error({
-					UPDATE_CPO_BY_ID_ERROR: {
-						err,
-						message: err.message,
-					},
-				});
-				return res.status(err.status || 500).json({
-					status: err.status || 500,
-					data: err.data || [],
-					message: err.message || "Internal Server Error",
-				});
+				req.error_name = "UPDATE_CPO_BY_ID_ERROR";
+				next(err);
 			}
 		}
 	);
@@ -407,15 +384,18 @@ module.exports = (app) => {
 		 * @param {import('express').Request} req
 		 * @param {import('express').Response} res
 		 */
-		async (req, res) => {
+		async (req, res, next) => {
 			try {
 				const { cpo_owner_id, rfid_card_tag } = req.params;
 
 				logger.info({
 					ADD_RFID_REQUEST: {
-						role: req.role,
-						cpo_owner_id,
-						rfid_card_tag,
+						data: {
+							role: req.role,
+							cpo_owner_id,
+							rfid_card_tag,
+						},
+						message: "SUCCESS",
 					},
 				});
 
@@ -431,17 +411,8 @@ module.exports = (app) => {
 					.status(200)
 					.json({ status: 200, data: result, message: "Success" });
 			} catch (err) {
-				logger.error({
-					ADD_RFID_ERROR: {
-						err,
-						message: err.message,
-					},
-				});
-				return res.status(err.status || 500).json({
-					status: err.status || 500,
-					data: err.data || [],
-					message: err.message || "Internal Server Error",
-				});
+				req.error_name = "ADD_RFID_ERROR";
+				next(err);
 			}
 		}
 	);
@@ -461,16 +432,19 @@ module.exports = (app) => {
 		 * @param {import('express').Request} req
 		 * @param {import('express').Response} res
 		 */
-		async (req, res) => {
+		async (req, res, next) => {
 			try {
 				const { cpo_owner_id } = req.params;
 				const { amount } = req.body;
 
 				logger.info({
 					TOPUP_TO_CPO_REQUEST: {
-						role: req.role,
-						cpo_owner_id,
-						amount,
+						data: {
+							role: req.role,
+							cpo_owner_id,
+							amount,
+						},
+						message: "SUCCESS",
 					},
 				});
 
@@ -485,17 +459,8 @@ module.exports = (app) => {
 					.status(200)
 					.json({ status: 200, data: result, message: "Success" });
 			} catch (err) {
-				logger.error({
-					TOPUP_TO_CPO_RESPONSE: {
-						err,
-						message: err.message,
-					},
-				});
-				return res.status(err.status || 500).json({
-					status: err.status || 500,
-					data: err.data || [],
-					message: err.message || "Internal Server Error",
-				});
+				req.error_name = "TOPUP_TO_CPO_ERROR";
+				next(err);
 			}
 		}
 	);
@@ -515,14 +480,17 @@ module.exports = (app) => {
 		 * @param {import('express').Request} req
 		 * @param {import('express').Response} res
 		 */
-		async (req, res) => {
+		async (req, res, next) => {
 			try {
 				const { cpo_owner_id } = req.params;
 
 				logger.info({
 					GET_TOPUP_LOGS: {
-						role: req.role,
-						cpo_owner_id,
+						data: {
+							role: req.role,
+							cpo_owner_id,
+						},
+						message: "SUCCESS",
 					},
 				});
 
@@ -538,17 +506,8 @@ module.exports = (app) => {
 					.status(200)
 					.json({ status: 200, data: result, message: "Success" });
 			} catch (err) {
-				logger.error({
-					GET_TOPUP_LOGS_ERROR: {
-						err,
-						message: err.message,
-					},
-				});
-				return res.status(err.status || 500).json({
-					status: err.status || 500,
-					data: err.data || [],
-					message: err.message || "Internal Server Error",
-				});
+				req.error_name = "GET_TOPUP_LOGS_ERROR";
+				next(err);
 			}
 		}
 	);
@@ -568,13 +527,16 @@ module.exports = (app) => {
 		 * @param {import('express').Request} req
 		 * @param {import('express').Response} res
 		 */
-		async (req, res) => {
+		async (req, res, next) => {
 			try {
 				const { reference_id } = req.params;
 
 				logger.info({
 					VOID_TOPUP_REQUEST: {
-						reference_id,
+						data: {
+							reference_id,
+						},
+						message: "SUCCESS",
 					},
 				});
 
@@ -582,25 +544,41 @@ module.exports = (app) => {
 
 				logger.info({
 					VOID_TOPUP_RESPONSE: {
-						message: "Success",
+						message: "SUCCESS",
 					},
 				});
 				return res
 					.status(200)
 					.json({ status: 200, data: result, message: "Success" });
 			} catch (err) {
-				logger.error({
-					VOID_TOPUP_ERROR: {
-						err,
-						message: err.message,
-					},
-				});
-				return res.status(err.status || 500).json({
-					status: err.status || 500,
-					data: err.data || [],
-					message: err.message || "Internal Server Error",
-				});
+				req.error_name = "VOID_TOPUP_ERROR";
+				next(err);
 			}
 		}
 	);
+
+	app.use((err, req, res, next) => {
+		logger.error({
+			API_REQUEST_ERROR: {
+				error_name: req.error_name || "UNKNOWN_ERROR",
+				message: err.message,
+				stack: err.stack.replace(/\\/g, "/"), // Include stack trace for debugging
+				request: {
+					method: req.method,
+					url: req.url,
+					code: err.status || 500,
+				},
+				data: err.data || [],
+			},
+		});
+
+		const status = err.status || 500;
+		const message = err.message || "Internal Server Error";
+
+		res.status(status).json({
+			status,
+			data: err.data || [],
+			message,
+		});
+	});
 };
