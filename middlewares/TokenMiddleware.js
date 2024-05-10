@@ -1,3 +1,4 @@
+const fs = require("fs");
 const jwt = require("jsonwebtoken");
 const JsonWebToken = require("../utils/JsonWebToken");
 const {
@@ -8,6 +9,7 @@ const {
 const logger = require("../config/winston");
 const Crypto = require("../utils/Crypto");
 const AccountRepository = require("../repository/AccountRepository");
+const path = require("path");
 
 module.exports = class TokenMiddleware {
 	#repository;
@@ -75,6 +77,7 @@ module.exports = class TokenMiddleware {
 						req.role_id = decode.data.role_id;
 						req.role = decode.data.role;
 						req.access_token = decryptedAccessToken;
+						req.rfid_card_tag = decode.data.rfid_card_tag;
 					}
 				);
 
@@ -85,23 +88,8 @@ module.exports = class TokenMiddleware {
 				});
 				next();
 			} catch (err) {
-				logger.error({
-					ACCESS_TOKEN_VERIFIER_MIDDLEWARE_ERROR: {
-						message: err.message,
-					},
-				});
-
-				if (err !== null) {
-					return res.status(err.status || 500).json({
-						status: err.status || 500,
-						data: err.data,
-						message: err.message,
-					});
-				}
-
-				return res
-					.status(500)
-					.json({ status: 500, data: [], message: "Internal Server Error" });
+				req.error_name = "ACCESS_TOKEN_ERROR";
+				next(err);
 			}
 		};
 	}
@@ -181,6 +169,7 @@ module.exports = class TokenMiddleware {
 						req.role_id = decode.data.role_id;
 						req.role = decode.data.role;
 						req.refresh_token = decryptedRefreshToken;
+						req.rfid_card_tag = decode.data.rfid_card_tag;
 					}
 				);
 
@@ -191,17 +180,8 @@ module.exports = class TokenMiddleware {
 				});
 				next();
 			} catch (err) {
-				if (err !== null) {
-					return res.status(err.status ? err.status : 500).json({
-						status: err.status ? err.status : 500,
-						data: err.data,
-						message: err.message,
-					});
-				}
-
-				return res
-					.status(500)
-					.json({ status: 500, data: [], message: "Internal Server Error" });
+				req.error_name = "REFRESH_TOKEN_ERROR";
+				next(err);
 			}
 		};
 	}
@@ -224,6 +204,9 @@ module.exports = class TokenMiddleware {
 			});
 
 			try {
+				if (!req.headers.authorization)
+					throw new HttpUnauthorized("MISSING_BASIC_TOKEN", []);
+
 				const securityType = req.headers.authorization.split(" ")[0];
 				const token = req.headers.authorization.split(" ")[1];
 
@@ -256,23 +239,8 @@ module.exports = class TokenMiddleware {
 
 				next();
 			} catch (err) {
-				logger.error({
-					BASIC_TOKEN_VERIFIER_MIDDLEWARE_ERROR: {
-						message: err.message,
-					},
-				});
-
-				if (err !== null) {
-					return res.status(err.status ? err.status : 500).json({
-						status: err.status ? err.status : 500,
-						data: err.data,
-						message: err.message,
-					});
-				}
-
-				return res
-					.status(500)
-					.json({ status: 500, data: [], message: "Internal Server Error" });
+				req.error_name = "BASIC_TOKEN_ERROR";
+				next(err);
 			}
 		};
 	}

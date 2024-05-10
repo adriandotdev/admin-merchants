@@ -2,12 +2,14 @@ const mysql = require("../database/mysql");
 
 module.exports = class MerchantRepository {
 	GetCPOs(data) {
-		const QUERY = `SELECT users.username, 
-	cpo_owners.* 
-	FROM cpo_owners 
-	INNER JOIN users 
-	ON cpo_owners.user_id = users.id
-	LIMIT ? OFFSET ?`;
+		const QUERY = `
+			SELECT 
+				users.username, 
+				cpo_owners.* 
+			FROM cpo_owners 
+			INNER JOIN users ON cpo_owners.user_id = users.id
+			LIMIT ? OFFSET ?
+		`;
 
 		return new Promise((resolve, reject) => {
 			mysql.query(
@@ -78,11 +80,14 @@ module.exports = class MerchantRepository {
 	 */
 	SearchCPOByName(cpoOwnerName) {
 		const QUERY = `
-		SELECT users.username, cpo_owners.* 
-		FROM cpo_owners
-		INNER JOIN users
-		ON cpo_owners.user_id = users.id
-		WHERE LOWER(cpo_owner_name) LIKE ?`;
+			SELECT 
+				users.username, 
+				cpo_owners.* 
+			FROM cpo_owners
+			INNER JOIN users ON cpo_owners.user_id = users.id
+			WHERE 
+				LOWER(cpo_owner_name) LIKE ?
+		`;
 
 		return new Promise((resolve, reject) => {
 			mysql.query(QUERY, [`%${cpoOwnerName}%`], (err, result) => {
@@ -95,10 +100,13 @@ module.exports = class MerchantRepository {
 	}
 
 	UpdateCPOByID({ id, query }) {
-		const QUERY = `UPDATE cpo_owners
-		INNER JOIN users
-		ON cpo_owners.user_id = users.id
-		${query} WHERE cpo_owners.id = ?`;
+		const QUERY = `
+			UPDATE 
+				cpo_owners
+			INNER JOIN users ON cpo_owners.user_id = users.id
+			${query} 
+			WHERE 
+				cpo_owners.id = ?`;
 
 		return new Promise((resolve, reject) => {
 			mysql.query(QUERY, [id], (err, result) => {
@@ -140,14 +148,19 @@ module.exports = class MerchantRepository {
 	}
 
 	GetTopupByID(cpoOwnerID) {
-		const QUERY = `SELECT topup_logs.*, topup_logs.id, DATE_ADD(topup_logs.date_created, INTERVAL 60 MINUTE) AS voidable_until
-		FROM topup_logs
-		INNER JOIN cpo_owners
-		ON cpo_owners.user_id = topup_logs.user_id
-		WHERE cpo_owners.id = ?
-		AND NOW() < DATE_ADD(topup_logs.date_created, INTERVAL 60 MINUTE) 
-		AND type = 'TOPUP'
-		AND void_id IS NULL`;
+		const QUERY = `
+			SELECT 
+				topup_logs.*, 
+				topup_logs.id, 
+				DATE_ADD(topup_logs.date_created, INTERVAL 60 MINUTE) AS voidable_until
+			FROM topup_logs
+			INNER JOIN cpo_owners ON cpo_owners.user_id = topup_logs.user_id
+			WHERE 
+				cpo_owners.id = ?
+				AND NOW() < DATE_ADD(topup_logs.date_created, INTERVAL 60 MINUTE) 
+				AND type = 'TOPUP'
+				AND void_id IS NULL
+		`;
 
 		return new Promise((resolve, reject) => {
 			mysql.query(QUERY, [cpoOwnerID], (err, result) => {
