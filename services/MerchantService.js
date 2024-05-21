@@ -23,7 +23,7 @@ module.exports = class MerchantService {
 
 		const email = new Email(data.contact_email, { username, password });
 
-		// await email.SendUsernameAndPassword();
+		await email.SendUsernameAndPassword();
 
 		const result = await this.#repository.RegisterCPO({ ...data, password });
 
@@ -168,5 +168,22 @@ module.exports = class MerchantService {
 		if (status !== "SUCCESS") throw new HttpBadRequest(status, []);
 
 		return { status, current_balance, reference_number };
+	}
+
+	async DeactivateCPOAccount(action, userID) {
+		if (!["activate", "deactivate"].includes(action))
+			throw new HttpBadRequest("INVALID_ACTION", {
+				message: "Valid actions are: activate, and deactivate",
+			});
+
+		let result = null;
+
+		if (action === "activate")
+			result = await this.#repository.ActivateCPOAccount(userID);
+		else result = await this.#repository.DeactivateCPOAccount(userID);
+
+		if (result.affectedRows) return "SUCCESS";
+
+		return "NO_CHANGES_APPLIED";
 	}
 };
