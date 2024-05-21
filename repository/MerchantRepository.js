@@ -186,4 +186,48 @@ module.exports = class MerchantRepository {
 			});
 		});
 	}
+
+	DeactivateCPOAccount(userID) {
+		const QUERY = `
+			UPDATE 
+				users
+			SET 
+				user_status = 'INACTIVE'
+			WHERE 
+				id = ?
+				AND role = 'CPO_OWNER'
+		`;
+
+		return new Promise((resolve, reject) => {
+			mysql.query(QUERY, userID, (err, result) => {
+				if (err) {
+					reject(err);
+				}
+
+				resolve(result);
+			});
+		});
+	}
+
+	ActivateCPOAccount(userID) {
+		const QUERY = `
+			UPDATE 
+				users
+			SET 
+				user_status = 'ACTIVE'
+			WHERE 
+				id = ?
+				AND role = 'CPO_OWNER'
+		`;
+
+		return new Promise((resolve, reject) => {
+			mysql.query(QUERY, userID, (err, result) => {
+				if (err) {
+					reject(err);
+				}
+
+				resolve(result);
+			});
+		});
+	}
 };

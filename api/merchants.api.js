@@ -557,6 +557,51 @@ module.exports = (app) => {
 		}
 	);
 
+	app.patch(
+		"/admin_merchants/api/v1/merchants/:action/:user_id",
+		[
+			tokenMiddleware.AccessTokenVerifier(),
+			rolesMiddleware.CheckRole(
+				ROLES.ADMIN,
+				ROLES.ADMIN_NOC,
+				ROLES.ADMIN_MARKETING
+			),
+		],
+		/**
+		 * @param {import('express').Request} req
+		 * @param {import('express').Response} res
+		 */
+		async (req, res) => {
+			try {
+				const { action, user_id } = req.params;
+				logger.info({
+					ACTIVATE_OR_DEACTIVATE_CPO_ACCOUNT_ERROR: {
+						data: {
+							action,
+							user_id,
+						},
+						message: "SUCCESS",
+					},
+				});
+
+				const result = await service.DeactivateCPOAccount(action, user_id);
+
+				logger.info({
+					ACTIVATE_OR_DEACTIVATE_CPO_ACCOUNT_ERROR: {
+						message: "SUCCESS",
+					},
+				});
+
+				return res
+					.status(200)
+					.json({ status: 200, data: result, message: "Success" });
+			} catch (err) {
+				req.error_name = "ACTIVATE_OR_DEACTIVATE_CPO_ACCOUNT_ERROR";
+				next(err);
+			}
+		}
+	);
+
 	app.use((err, req, res, next) => {
 		logger.error({
 			API_REQUEST_ERROR: {
