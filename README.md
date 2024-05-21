@@ -12,6 +12,8 @@
 
 Retrieve all of the charging point operators.
 
+**Authorization: `Bearer TOKEN`**
+
 **Sample data**
 
 ```json
@@ -48,6 +50,8 @@ Retrieve all of the charging point operators.
 **Description**
 
 Registers new Charging Point Operator
+
+**Authorization: `Bearer TOKEN`**
 
 **Request**
 
@@ -88,6 +92,8 @@ Registers new Charging Point Operator
 
 Checks if value exists in the database.
 
+**Authorization: `Bearer TOKEN`**
+
 **Parameters**
 
 - **type**
@@ -125,6 +131,8 @@ Checks if value exists in the database.
 
 Search charging point operator by its name.
 
+**Authorization: `Bearer TOKEN`**
+
 **Parameters**
 
 **cpo_owner_name** - Charging Point Operator's name.
@@ -159,6 +167,8 @@ Search charging point operator by its name.
 **Description**
 
 Updates Charging Point Operator's details
+
+**Authorization: `Bearer TOKEN`**
 
 **Parameters**
 
@@ -200,6 +210,8 @@ Updates Charging Point Operator's details
 
 Assigns or add RFID to Charging Point Operators.
 
+**Authorization: `Bearer TOKEN`**
+
 **Parameters**
 
 **cpo_owner_id**
@@ -233,6 +245,8 @@ Assigns or add RFID to Charging Point Operators.
 **Description**
 
 Topups to Charging Point Operator's account.
+
+**Authorization: `Bearer TOKEN`**
 
 **Parameters**
 
@@ -276,6 +290,8 @@ Topups to Charging Point Operator's account.
 
 Get all of the topups of the Charging Point Operator based on its ID.
 
+**Authorization: `Bearer TOKEN`**
+
 **Parameter**
 
 **cpo_owner_id**
@@ -315,6 +331,8 @@ Get all of the topups of the Charging Point Operator based on its ID.
 
 Voids a topup based on reference id or id.
 
+**Authorization: `Bearer TOKEN`**
+
 **Parameters**
 
 **reference_id**
@@ -332,6 +350,39 @@ Voids a topup based on reference id or id.
 		"current_balance": "1000.00",
 		"reference_number": 59
 	},
+	"message": "Success"
+}
+```
+
+---
+
+### ACTIVATE or DEACTIVATE CPO Owner Account - `PATCH /api/v1/merchants/:action/:user_id`
+
+**Authorization: `Bearer TOKEN`**
+
+**Parameters**
+
+- **action** - Action to be used. Valid actions are activate, and deactivate.
+- **user_id** - ID of the user to be updated
+
+**Sample Response**
+
+This response is when the id is not found or the current value of record is the same to the value for update
+
+```json
+{
+	"status": 200,
+	"data": "NO_CHANGES_APPLIED",
+	"message": "Success"
+}
+```
+
+This response is when the update is applied.
+
+```json
+{
+	"status": 200,
+	"data": "SUCCESS",
 	"message": "Success"
 }
 ```
