@@ -230,4 +230,48 @@ module.exports = class MerchantRepository {
 			});
 		});
 	}
+
+	GetCompanyPartnerDetails() {
+		const QUERY = `
+
+			SELECT 
+				*
+			FROM
+				company_partner_details
+		`;
+
+		return new Promise((resolve, reject) => {
+			mysql.query(QUERY, (err, result) => {
+				if (err) {
+					reject(err);
+				}
+
+				resolve(result);
+			});
+		});
+	}
+
+	RegisterCompanyPartnerDetails({ company_name, party_id, country_code }) {
+		const QUERY = `
+			INSERT INTO 
+				company_partner_details (company_name, party_id, country_code, account_status, date_created, date_modified)
+			VALUES (
+				?,?,?,'ACTIVE',NOW(), NOW()
+			)
+		`;
+
+		return new Promise((resolve, reject) => {
+			mysql.query(
+				QUERY,
+				[company_name, party_id, country_code],
+				(err, result) => {
+					if (err) {
+						reject(err);
+					}
+
+					resolve(result);
+				}
+			);
+		});
+	}
 };

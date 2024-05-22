@@ -602,6 +602,94 @@ module.exports = (app) => {
 		}
 	);
 
+	/** Company Partner Details */
+	app.get(
+		"/admin_merchants/api/v1/company_partner_details",
+		[
+			tokenMiddleware.AccessTokenVerifier(),
+			rolesMiddleware.CheckRole(
+				ROLES.ADMIN,
+				ROLES.ADMIN_NOC,
+				ROLES.ADMIN_MARKETING
+			),
+		],
+		/**
+		 * @param {import('express').Request} req
+		 * @param {import('express').Response} res
+		 */
+		async (req, res, next) => {
+			try {
+				logger.info({
+					GET_COMPANY_PARTNER_DETAILS_REQUEST: {
+						message: "SUCCESS",
+					},
+				});
+
+				const result = await service.GetCompanyPartnerDetails();
+
+				logger.info({
+					GET_COMPANY_PARTNER_DETAILS_RESPONSE: {
+						message: "SUCCESS",
+					},
+				});
+
+				return res
+					.status(200)
+					.json({ status: 200, data: result, message: "Success" });
+			} catch (err) {
+				req.error_name = "GET_COMPANY_PARTNER_DETAILS_ERROR";
+				next(err);
+			}
+		}
+	);
+
+	app.post(
+		"/admin_merchants/api/v1/company_partner_details",
+		[
+			tokenMiddleware.AccessTokenVerifier(),
+			rolesMiddleware.CheckRole(
+				ROLES.ADMIN,
+				ROLES.ADMIN_NOC,
+				ROLES.ADMIN_MARKETING
+			),
+		],
+
+		/**
+		 * @param {import('express').Request} req
+		 * @param {import('express').Response} res
+		 */
+		async (req, res, next) => {
+			try {
+				const { company_name, address } = req.body;
+
+				logger.info({
+					REGISTER_COMPANY_PARTNER_REQUEST: {
+						data: { company_name },
+						message: "SUCCESS",
+					},
+				});
+
+				const result = await service.RegisterCompanyPartnerDetails(
+					company_name,
+					address
+				);
+
+				logger.info({
+					REGISTER_COMPANY_PARTNER_RESPONSE: {
+						message: "SUCCESS",
+					},
+				});
+
+				return res
+					.status(200)
+					.json({ status: 200, data: result, message: "Success" });
+			} catch (err) {
+				req.error_name = "REGISTER_COMPANY_PARTNER_ERROR";
+				next(err);
+			}
+		}
+	);
+
 	app.use((err, req, res, next) => {
 		logger.error({
 			API_REQUEST_ERROR: {
