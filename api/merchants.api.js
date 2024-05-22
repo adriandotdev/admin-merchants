@@ -671,7 +671,8 @@ module.exports = (app) => {
 
 				const result = await service.RegisterCompanyPartnerDetails(
 					company_name,
-					address
+					address,
+					req.id
 				);
 
 				logger.info({

@@ -195,7 +195,7 @@ module.exports = class MerchantService {
 		return result;
 	}
 
-	async RegisterCompanyPartnerDetails(companyName, address) {
+	async RegisterCompanyPartnerDetails(companyName, address, id) {
 		const geocodedAddress = await axios.get(
 			`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURI(
 				address
@@ -219,7 +219,22 @@ module.exports = class MerchantService {
 			country_code,
 		});
 
-		if (result.insertId) return "SUCCESS";
+		if (result.insertId) {
+			await this.#repository.AuditTrail({
+				admin_id: id,
+				cpo_id: null,
+				action: "CREATED Company Partner Details",
+				remarks: "success",
+			});
+			return "SUCCESS";
+		}
+
+		await this.#repository.AuditTrail({
+			admin_id: id,
+			cpo_id: null,
+			action: "ATTEMPT to create partner details",
+			remarks: "failed",
+		});
 
 		return result;
 	}
