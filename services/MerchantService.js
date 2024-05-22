@@ -4,6 +4,8 @@ const generator = require("generate-password");
 const { HttpBadRequest } = require("../utils/HttpError");
 const Email = require("../utils/Email");
 
+const axios = require("axios");
+
 module.exports = class MerchantService {
 	#repository;
 
@@ -185,5 +187,75 @@ module.exports = class MerchantService {
 		if (result.affectedRows) return "SUCCESS";
 
 		return "NO_CHANGES_APPLIED";
+	}
+
+	async GetCompanyPartnerDetails() {
+		const result = await this.#repository.GetCompanyPartnerDetails();
+
+		return result;
+	}
+
+	async RegisterCompanyPartnerDetails(companyName, address) {
+		const geocodedAddress = await axios.get(
+			`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURI(
+				address
+			)}&key=${process.env.GOOGLE_GEO_API_KEY}`
+		);
+
+		const address_components =
+			geocodedAddress.data.results[0]?.address_components;
+
+		if (!address_components) throw new HttpBadRequest("LOCATION_NOT_FOUND", []);
+
+		const country_code = address_components.find((component) =>
+			component.types.includes("country")
+		)?.short_name;
+
+		const party_id = await this.#GeneratePartyID(companyName);
+
+		const result = await this.#repository.RegisterCompanyPartnerDetails({
+			company_name: companyName,
+			party_id,
+			country_code,
+		});
+
+		if (result.insertId) return "SUCCESS";
+
+		return result;
+	}
+
+	async #GeneratePartyID(companyName) {
+		/**
+		 * @Steps
+		 *
+		 * 1. Get all of the generated party ids first from the db.
+		 *
+		 * 2. Remove the spaces from company name.
+		 *
+		 * 3. Generate EVSE ID */
+
+		const partyIDs = await this.#repository.GetCompanyPartnerDetails();
+
+		const companyNameWithoutSpaces = String(companyName)
+			.replace(/\s+/g, "")
+			.trim()
+			.toUpperCase(); // Trim and remove spaces.
+
+		let partyID = companyNameWithoutSpaces.slice(0, 2);
+
+		/** For the mean time, generation of this party_id is for the third (3rd) letter. */
+		for (let i = 2; i < companyNameWithoutSpaces.length; i++) {
+			// Check if party id already exists
+			const isFound = partyIDs.some(
+				(data) => data.party_id === partyID + companyNameWithoutSpaces[i]
+			);
+
+			if (!isFound) {
+				partyID += companyNameWithoutSpaces[i];
+				break;
+			}
+		}
+
+		return partyID.toUpperCase(); // Return the party id. it must be uppercase.
 	}
 };
