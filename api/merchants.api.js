@@ -168,6 +168,7 @@ module.exports = (app) => {
 					contact_number,
 					contact_email,
 					username,
+					admin_id: req.id, // admin id
 				});
 
 				logger.info({
@@ -352,6 +353,7 @@ module.exports = (app) => {
 				const result = await service.UpdateCPOByID({
 					id: req.params.id,
 					data: { ...req.body },
+					admin_id: req.id,
 				});
 
 				logger.info({
@@ -399,7 +401,11 @@ module.exports = (app) => {
 					},
 				});
 
-				const result = await service.AddRFID(cpo_owner_id, rfid_card_tag);
+				const result = await service.AddRFID(
+					cpo_owner_id,
+					rfid_card_tag,
+					req.id
+				);
 
 				logger.info({
 					ADD_RFID_RESPONSE: {
@@ -448,7 +454,7 @@ module.exports = (app) => {
 					},
 				});
 
-				const result = await service.Topup(cpo_owner_id, amount);
+				const result = await service.Topup(cpo_owner_id, amount, req.id);
 
 				logger.info({
 					TOPUP_TO_CPO_RESPONSE: {
@@ -540,7 +546,7 @@ module.exports = (app) => {
 					},
 				});
 
-				const result = await service.VoidTopup(reference_id);
+				const result = await service.VoidTopup(reference_id, req.id);
 
 				logger.info({
 					VOID_TOPUP_RESPONSE: {
@@ -584,7 +590,11 @@ module.exports = (app) => {
 					},
 				});
 
-				const result = await service.DeactivateCPOAccount(action, user_id);
+				const result = await service.ChangeCPOAccountStatus(
+					action,
+					user_id,
+					req.id
+				);
 
 				logger.info({
 					ACTIVATE_OR_DEACTIVATE_CPO_ACCOUNT_ERROR: {
@@ -671,7 +681,8 @@ module.exports = (app) => {
 
 				const result = await service.RegisterCompanyPartnerDetails(
 					company_name,
-					address
+					address,
+					req.id
 				);
 
 				logger.info({

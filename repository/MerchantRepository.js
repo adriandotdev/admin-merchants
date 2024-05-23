@@ -274,4 +274,24 @@ module.exports = class MerchantRepository {
 			);
 		});
 	}
+
+	AuditTrail({ admin_id, cpo_id, action, remarks }) {
+		const QUERY = `
+			INSERT INTO 
+				admin_audit_trails (admin_id, cpo_id, action, remarks, date_created, date_modified)
+			VALUES (
+				?,?,?,?,NOW(),NOW()
+			)
+		`;
+
+		return new Promise((resolve, reject) => {
+			mysql.query(QUERY, [admin_id, cpo_id, action, remarks], (err, result) => {
+				if (err) {
+					reject(err);
+				}
+
+				resolve(result);
+			});
+		});
+	}
 };
