@@ -20,20 +20,42 @@ module.exports = class MerchantService {
 	}
 
 	async RegisterCPO(data) {
-		const password = generator.generate({ length: 10, numbers: false });
-		const username = data.username;
+		try {
+			const password = generator.generate({ length: 10, numbers: false });
+			const username = data.username;
 
-		const email = new Email(data.contact_email, { username, password });
+			const email = new Email(data.contact_email, { username, password });
 
-		await email.SendUsernameAndPassword();
+			await email.SendUsernameAndPassword();
 
-		const result = await this.#repository.RegisterCPO({ ...data, password });
+			const result = await this.#repository.RegisterCPO({ ...data, password });
 
-		const status = result[0][0].STATUS;
+			const status = result[0][0].STATUS;
 
-		if (status !== "SUCCESS") throw new HttpBadRequest("Bad Request", status);
+			if (status !== "SUCCESS") {
+				throw new HttpBadRequest("Bad Request", status);
+			}
 
-		return status;
+			// Add audit trail
+			await this.#repository.AuditTrail({
+				admin_id: data.admin_id,
+				cpo_id: null,
+				action: "REGISTER Charging Point Operator",
+				remarks: "success",
+			});
+
+			return status;
+		} catch (err) {
+			// Add audit trail
+			await this.#repository.AuditTrail({
+				admin_id: data.admin_id,
+				cpo_id: null,
+				action: "ATTEMPT to REGISTER Charging Point Operator",
+				remarks: "failed",
+			});
+
+			throw err;
+		}
 	}
 
 	async CheckRegisterCPO(type, value) {
@@ -69,6 +91,7 @@ module.exports = class MerchantService {
 
 		return STATUS;
 	}
+
 	/**
 	 * @param {String} cpoOwnerName
 	 * @returns
@@ -88,70 +111,138 @@ module.exports = class MerchantService {
 		return result;
 	}
 
-	async UpdateCPOByID({ id, data }) {
-		const VALID_INPUTS = [
-			"cpo_owner_name",
-			"contact_name",
-			"contact_number",
-			"contact_email",
-			"username",
-		];
+	async UpdateCPOByID({ id, data, admin_id }) {
+		try {
+			const VALID_INPUTS = [
+				"cpo_owner_name",
+				"contact_name",
+				"contact_number",
+				"contact_email",
+				"username",
+			];
 
-		if (!Object.keys(data).every((value) => VALID_INPUTS.includes(value)))
-			throw new HttpBadRequest(`Valid inputs are: ${VALID_INPUTS.join(", ")}`);
+			if (!Object.keys(data).every((value) => VALID_INPUTS.includes(value)))
+				throw new HttpBadRequest(
+					`Valid inputs are: ${VALID_INPUTS.join(", ")}`
+				);
 
-		if (Object.keys(data).length === 0) {
-			// Check if data object is empty
-			return "NO_CHANGES_APPLIED";
+			if (Object.keys(data).length === 0) {
+				await this.#repository.AuditTrail({
+					admin_id,
+					cpo_id: null,
+					action:
+						"ATTEMPT to UPDATE Charging Point Operator - No Changes Applied",
+					remarks: "success",
+				});
+				return "NO_CHANGES_APPLIED";
+			}
+
+			let newData = {};
+
+			// Encrypt all of the updated data except the username.
+			Object.keys(data).forEach((key) => {
+				newData[key] = data[key];
+			});
+
+			// Setting up the query
+			let query = "SET";
+
+			const dataEntries = Object.entries(newData);
+
+			for (const [key, value] of dataEntries) {
+				query += ` ${key} = '${value}',`;
+			}
+
+			const updateResult = await this.#repository.UpdateCPOByID({
+				id,
+				query: query.slice(0, query.length - 1),
+			});
+
+			if (updateResult.affectedRows > 0) {
+				// Add audit trail
+				await this.#repository.AuditTrail({
+					admin_id: admin_id,
+					cpo_id: null,
+					action: `UPDATE Charging Point Operator with id of ${id}`,
+					remarks: "success",
+				});
+
+				return "SUCCESS";
+			}
+
+			throw new HttpBadRequest("CPO_ID_DOES_NOT_EXISTS", []);
+		} catch (err) {
+			// Add audit trail
+			await this.#repository.AuditTrail({
+				admin_id: admin_id,
+				cpo_id: null,
+				action: "ATTEMPT to UPDATE Charging Point Operator",
+				remarks: "failed",
+			});
+
+			throw err;
 		}
-
-		let newData = {};
-
-		// Encrypt all of the updated data except the username.
-		Object.keys(data).forEach((key) => {
-			newData[key] = data[key];
-		});
-
-		// Setting up the query
-		let query = "SET";
-
-		const dataEntries = Object.entries(newData);
-
-		for (const [key, value] of dataEntries) {
-			query += ` ${key} = '${value}',`;
-		}
-
-		const updateResult = await this.#repository.UpdateCPOByID({
-			id,
-			query: query.slice(0, query.length - 1),
-		});
-
-		if (updateResult.affectedRows > 0) return "SUCCESS";
-
-		throw new HttpBadRequest("CPO_ID_DOES_NOT_EXISTS", []);
 	}
 
-	async AddRFID(cpoOwnerID, rfidCardTag) {
-		const result = await this.#repository.AddRFID(cpoOwnerID, rfidCardTag);
+	async AddRFID(cpoOwnerID, rfidCardTag, admin_id) {
+		try {
+			const result = await this.#repository.AddRFID(cpoOwnerID, rfidCardTag);
 
-		const status = result[0][0].STATUS;
+			const status = result[0][0].STATUS;
 
-		if (status !== "SUCCESS") throw new HttpBadRequest(status, []);
+			if (status !== "SUCCESS") throw new HttpBadRequest(status, []);
 
-		return status;
+			await this.#repository.AuditTrail({
+				admin_id,
+				cpo_id: null,
+				action: `ADD RFID to Charging Point Operator with id of ${cpoOwnerID}`,
+				remarks: "success",
+			});
+
+			return status;
+		} catch (err) {
+			await this.#repository.AuditTrail({
+				admin_id,
+				cpo_id: null,
+				action: "ATTEMPT to ADD RFID to Charging Point Operator",
+				remarks: "failed",
+			});
+			throw err;
+		}
 	}
 
-	async Topup(cpoOwnerID, amount) {
-		if (amount <= 0) throw new HttpBadRequest("INVALID_AMOUNT", []);
+	async Topup(cpoOwnerID, amount, admin_id) {
+		try {
+			if (amount <= 0) throw new HttpBadRequest("INVALID_AMOUNT", []);
 
-		const result = await this.#repository.Topup(cpoOwnerID, amount);
+			const result = await this.#repository.Topup(cpoOwnerID, amount);
 
-		const status = result[0][0].STATUS;
-		const new_balance = result[0][0].current_balance;
+			const status = result[0][0].STATUS;
+			const new_balance = result[0][0].current_balance;
 
-		if (status !== "SUCCESS") throw new HttpBadRequest(status, []);
+			if (status !== "SUCCESS") {
+				throw new HttpBadRequest(status, []);
+			}
 
-		return { status, new_balance };
+			// Audit trail
+			await this.#repository.AuditTrail({
+				admin_id,
+				cpo_id: null,
+				action: `TOPUP to CPO with id of ${cpoOwnerID}`,
+				remarks: "success",
+			});
+
+			return { status, new_balance };
+		} catch (err) {
+			// Audit trail
+			await this.#repository.AuditTrail({
+				admin_id,
+				cpo_id: null,
+				action: `ATTEMPT to TOPUP to CPO with id of ${cpoOwnerID}`,
+				remarks: "failed",
+			});
+			throw err;
+		}
 	}
 
 	async GetTopupByID(cpoOwnerID) {
@@ -160,33 +251,73 @@ module.exports = class MerchantService {
 		return result;
 	}
 
-	async VoidTopup(referenceID) {
-		const result = await this.#repository.VoidTopup(referenceID);
+	async VoidTopup(referenceID, admin_id) {
+		try {
+			const result = await this.#repository.VoidTopup(referenceID);
 
-		const status = result[0][0].STATUS;
-		const current_balance = result[0][0].current_balance;
-		const reference_number = result[0][0].reference_number;
+			const status = result[0][0].STATUS;
+			const current_balance = result[0][0].current_balance;
+			const reference_number = result[0][0].reference_number;
 
-		if (status !== "SUCCESS") throw new HttpBadRequest(status, []);
+			if (status !== "SUCCESS") throw new HttpBadRequest(status, []);
 
-		return { status, current_balance, reference_number };
-	}
-
-	async DeactivateCPOAccount(action, userID) {
-		if (!["activate", "deactivate"].includes(action))
-			throw new HttpBadRequest("INVALID_ACTION", {
-				message: "Valid actions are: activate, and deactivate",
+			// Audit trail
+			await this.#repository.AuditTrail({
+				admin_id,
+				cpo_id: null,
+				action: `VOID Topup with reference ID of ${referenceID}`,
+				remarks: "success",
 			});
 
-		let result = null;
+			return { status, current_balance, reference_number };
+		} catch (err) {
+			// Audit trail
+			await this.#repository.AuditTrail({
+				admin_id,
+				cpo_id: null,
+				action: "ATTEMPT to VOID Topup",
+				remarks: "failed",
+			});
+			throw err;
+		}
+	}
 
-		if (action === "activate")
-			result = await this.#repository.ActivateCPOAccount(userID);
-		else result = await this.#repository.DeactivateCPOAccount(userID);
+	async ChangeCPOAccountStatus(action, userID, admin_id) {
+		try {
+			if (!["activate", "deactivate"].includes(action))
+				throw new HttpBadRequest("INVALID_ACTION", {
+					message: "Valid actions are: activate, and deactivate",
+				});
 
-		if (result.affectedRows) return "SUCCESS";
+			let result = null;
 
-		return "NO_CHANGES_APPLIED";
+			if (action === "activate")
+				result = await this.#repository.ActivateCPOAccount(userID);
+			else result = await this.#repository.DeactivateCPOAccount(userID);
+
+			if (result.affectedRows) {
+				await this.#repository.AuditTrail({
+					admin_id,
+					cpo_id: null,
+					action: `${
+						action === "activate" ? "ACTIVATE" : "DEACTIVATE"
+					} Charging Point Operator account with id of ${userID}`,
+					remarks: "success",
+				});
+				return "SUCCESS";
+			}
+
+			return "NO_CHANGES_APPLIED";
+		} catch (err) {
+			await this.#repository.AuditTrail({
+				admin_id,
+				cpo_id: null,
+				action: `ATTEMPT to DEACTIVATE Charging Point Operator account`,
+				remarks: "failed",
+			});
+
+			throw err;
+		}
 	}
 
 	async GetCompanyPartnerDetails() {
@@ -196,47 +327,58 @@ module.exports = class MerchantService {
 	}
 
 	async RegisterCompanyPartnerDetails(companyName, address, id) {
-		const geocodedAddress = await axios.get(
-			`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURI(
-				address
-			)}&key=${process.env.GOOGLE_GEO_API_KEY}`
-		);
+		try {
+			const geocodedAddress = await axios.get(
+				`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURI(
+					address
+				)}&key=${process.env.GOOGLE_GEO_API_KEY}`
+			);
 
-		const address_components =
-			geocodedAddress.data.results[0]?.address_components;
+			const address_components =
+				geocodedAddress.data.results[0]?.address_components;
 
-		if (!address_components) throw new HttpBadRequest("LOCATION_NOT_FOUND", []);
+			if (!address_components)
+				throw new HttpBadRequest("LOCATION_NOT_FOUND", []);
 
-		const country_code = address_components.find((component) =>
-			component.types.includes("country")
-		)?.short_name;
+			const country_code = address_components.find((component) =>
+				component.types.includes("country")
+			)?.short_name;
 
-		const party_id = await this.#GeneratePartyID(companyName);
+			const party_id = await this.#GeneratePartyID(companyName);
 
-		const result = await this.#repository.RegisterCompanyPartnerDetails({
-			company_name: companyName,
-			party_id,
-			country_code,
-		});
+			const result = await this.#repository.RegisterCompanyPartnerDetails({
+				company_name: companyName,
+				party_id,
+				country_code,
+			});
 
-		if (result.insertId) {
+			if (result.insertId) {
+				await this.#repository.AuditTrail({
+					admin_id: id,
+					cpo_id: null,
+					action: "CREATED Company Partner Details",
+					remarks: "success",
+				});
+				return "SUCCESS";
+			}
+
 			await this.#repository.AuditTrail({
 				admin_id: id,
 				cpo_id: null,
-				action: "CREATED Company Partner Details",
-				remarks: "success",
+				action: "ATTEMPT to create partner details",
+				remarks: "failed",
 			});
-			return "SUCCESS";
+
+			return result;
+		} catch (err) {
+			await this.#repository.AuditTrail({
+				admin_id: id,
+				cpo_id: null,
+				action: "ATTEMPT to create partner details",
+				remarks: "failed",
+			});
+			throw err;
 		}
-
-		await this.#repository.AuditTrail({
-			admin_id: id,
-			cpo_id: null,
-			action: "ATTEMPT to create partner details",
-			remarks: "failed",
-		});
-
-		return result;
 	}
 
 	async #GeneratePartyID(companyName) {
