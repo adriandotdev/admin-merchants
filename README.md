@@ -386,3 +386,67 @@ This response is when the update is applied.
 	"message": "Success"
 }
 ```
+
+---
+
+### List of Company Partner Details - `GET /api/v1/company_partner_details`
+
+**Description**
+
+Retrieve list of company partner details
+
+**Authorization: Bearer TOKEN**
+
+**Response**
+
+```json
+{
+	"status": 200,
+	"data": [
+		{
+			"id": 1,
+			"company_name": "ParkNcharge",
+			"party_id": "PNC",
+			"country_code": "PH",
+			"account_status": "ACTIVE",
+			"date_created": "2024-01-30T06:21:36.000Z",
+			"date_modified": "2024-01-30T06:21:38.000Z"
+		},
+		{
+			"id": 12,
+			"company_name": "TEST COMPANY",
+			"party_id": "TES",
+			"country_code": "PH",
+			"account_status": "ACTIVE",
+			"date_created": "2024-05-23T00:56:51.000Z",
+			"date_modified": "2024-05-23T00:56:51.000Z"
+		}
+	],
+	"message": "Success"
+}
+```
+
+---
+
+### Register Company Partner Details - `POST /api/v1/company_partner_details`
+
+**Description**
+
+Register new company partner details
+
+**Authorization: Bearer TOKEN**
+
+**Request**
+
+- **company_name** - Company name
+- **address** - Company address
+
+**Response**
+
+```json
+{
+	"status": 200,
+	"data": "SUCCESS",
+	"message": "Success"
+}
+```
