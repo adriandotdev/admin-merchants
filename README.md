@@ -450,3 +450,31 @@ Register new company partner details
 	"message": "Success"
 }
 ```
+
+---
+
+### UPDATE Company Partner Details - `PATCH /api/v1/company_partner_details/:id`
+
+**Description**
+
+Update company partner details
+
+**Authorization: Bearer TOKEN**
+
+**Parameter**
+
+- **id** - Company ID
+
+**Request**
+
+- **address** - New address of the company
+
+**Response**
+
+```json
+{
+	"status": 200,
+	"data": "SUCCESS",
+	"message": "Success"
+}
+```
