@@ -381,6 +381,59 @@ module.exports = class MerchantService {
 		}
 	}
 
+	async UpdateCompanyPartnerDetails({ address, id, admin_id }) {
+		try {
+			const geocodedAddress = await axios.get(
+				`https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURI(
+					address
+				)}&key=${process.env.GOOGLE_GEO_API_KEY}`
+			);
+
+			const address_components =
+				geocodedAddress.data.results[0]?.address_components;
+
+			if (!address_components)
+				throw new HttpBadRequest("LOCATION_NOT_FOUND", []);
+
+			const country_code = address_components.find((component) =>
+				component.types.includes("country")
+			)?.short_name;
+
+			const result = await this.#repository.UpdateCompanyPartnerDetails({
+				country_code,
+				id,
+			});
+
+			if (result.affectedRows) {
+				await this.#repository.AuditTrail({
+					admin_id,
+					cpo_id: null,
+					action: "UPDATE Company Partner Details",
+					remarks: "success",
+				});
+				return "SUCCESS";
+			}
+
+			await this.#repository.AuditTrail({
+				admin_id,
+				cpo_id: null,
+				action: "ATTEMPT to update company partner details",
+				remarks: "failed",
+			});
+
+			return result;
+		} catch (err) {
+			await this.#repository.AuditTrail({
+				admin_id,
+				cpo_id: null,
+				action: "ATTEMPT to update company partner details",
+				remarks: "failed",
+			});
+
+			throw err;
+		}
+	}
+
 	async #GeneratePartyID(companyName) {
 		/**
 		 * @Steps

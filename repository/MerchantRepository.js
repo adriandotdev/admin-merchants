@@ -275,6 +275,27 @@ module.exports = class MerchantRepository {
 		});
 	}
 
+	UpdateCompanyPartnerDetails({ country_code, id }) {
+		const QUERY = `
+		
+			UPDATE 
+				company_partner_details
+			SET 
+				country_code = ?
+			WHERE 
+				id = ?
+		`;
+
+		return new Promise((resolve, reject) => {
+			mysql.query(QUERY, [country_code, id], (err, result) => {
+				if (err) {
+					reject(err);
+				}
+
+				resolve(result);
+			});
+		});
+	}
 	AuditTrail({ admin_id, cpo_id, action, remarks }) {
 		const QUERY = `
 			INSERT INTO 

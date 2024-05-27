@@ -701,6 +701,57 @@ module.exports = (app) => {
 		}
 	);
 
+	app.patch(
+		"/admin_merchants/api/v1/company_partner_details/:id",
+		[
+			tokenMiddleware.AccessTokenVerifier(),
+			rolesMiddleware.CheckRole(
+				ROLES.ADMIN,
+				ROLES.ADMIN_NOC,
+				ROLES.ADMIN_MARKETING
+			),
+		],
+		/**
+		 * @param {import('express').Request} req
+		 * @param {import('express').Response} res
+		 */
+		async (req, res, next) => {
+			try {
+				const { id } = req.params;
+				const { company_name, address } = req.body;
+
+				logger.info({
+					UPDATE_COMPANY_PARTNER_REQUEST: {
+						data: {
+							company_name,
+							address,
+						},
+						message: "SUCCESS",
+					},
+				});
+
+				const result = await service.UpdateCompanyPartnerDetails({
+					address,
+					id,
+					admin_id: req.id,
+				});
+
+				logger.info({
+					UPDATE_COMPANY_PARTNER_RESPONSE: {
+						message: "SUCCESS",
+					},
+				});
+
+				return res
+					.status(200)
+					.json({ status: 200, data: result, message: "Success" });
+			} catch (err) {
+				req.error_name = "UPDATE_COMPANY_PARTNER_ERROR";
+				next(err);
+			}
+		}
+	);
+
 	app.use((err, req, res, next) => {
 		logger.error({
 			API_REQUEST_ERROR: {
