@@ -192,11 +192,70 @@ module.exports = class MerchantService {
 			}
 
 			let newData = {};
+			let errors = {};
 
 			// Encrypt all of the updated data except the username.
 			Object.keys(data).forEach((key) => {
 				newData[key] = data[key];
 			});
+
+			if (
+				(
+					await this.#repository.CheckIfColumnValueExists({
+						table: "users",
+						column: "username",
+						value: newData["username"],
+					})
+				).length > 0
+			)
+				errors.username = "USERNAME_EXISTS";
+
+			if (
+				(
+					await this.#repository.CheckIfColumnValueExists({
+						table: "cpo_owners",
+						column: "cpo_owner_name",
+						value: newData["cpo_owner_name"],
+					})
+				).length > 0
+			)
+				errors.cpo_owner_name = "CPO_OWNER_NAME_EXISTS";
+
+			if (
+				(
+					await this.#repository.CheckIfColumnValueExists({
+						table: "cpo_owners",
+						column: "contact_name",
+						value: newData["contact_name"],
+					})
+				).length > 0
+			)
+				errors.contact_name = "CONTACT_NAME_EXISTS";
+
+			if (
+				(
+					await this.#repository.CheckIfColumnValueExists({
+						table: "cpo_owners",
+						column: "contact_number",
+						value: newData["contact_number"],
+					})
+				).length > 0
+			)
+				errors.cotnact_number = "CONTACT_NUMBER_EXISTS";
+
+			if (
+				(
+					await this.#repository.CheckIfColumnValueExists({
+						table: "cpo_owners",
+						column: "contact_email",
+						value: newData["contact_email"],
+					})
+				).length > 0
+			)
+				errors.contact_email = "CONTACT_EMAIL_EXISTS";
+
+			if (Object.keys(errors).length)
+				throw new HttpBadRequest("INVALID_REQUEST", { errors });
 
 			// Setting up the query
 			let query = "SET";
