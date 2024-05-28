@@ -13,12 +13,38 @@ module.exports = class MerchantService {
 		this.#repository = new MerchantRepository();
 	}
 
+	/**
+	 * Retrieves a list of Charge Point Operators (CPOs) based on provided criteria.
+	 *
+	 * @async
+	 * @function GetCPOs
+	 * @param {Object} data - An object containing criteria for filtering CPOs.
+	 * @param {number} [data.limit=10] - The maximum number of CPOs to retrieve. Defaults to 10 if not provided.
+	 * @param {number} [data.offset=0] - The number of CPOs to skip before retrieving. Defaults to 0 if not provided.
+	 * @param {string} [data.sortBy="name"] - The field to sort the CPOs by. Defaults to "name" if not provided.
+	 * @param {string} [data.order="asc"] - The order in which the CPOs should be sorted. Can be "asc" for ascending or "desc" for descending. Defaults to "asc" if not provided.
+	 * @param {string} [data.searchQuery=""] - A search query to filter CPOs by name or other relevant fields. Defaults to an empty string if not provided.
+	 * @returns {Promise<Array<Object>>} A promise that resolves to an array of CPO objects matching the provided criteria.
+	 * @throws {Error} Throws an error if the retrieval of CPOs fails.
+	 */
 	async GetCPOs(data) {
 		const result = await this.#repository.GetCPOs(data);
 
 		return result;
 	}
 
+	/**
+	 * Registers a new Charging Point Operator (CPO) with the provided data.
+	 *
+	 * @async
+	 * @function RegisterCPO
+	 * @param {Object} data - An object containing the information needed to register the CPO.
+	 * @param {string} data.username - The username for the new CPO account.
+	 * @param {string} data.contact_email - The email address to which the username and temporary password will be sent.
+	 * @param {string} data.admin_id - The ID of the administrator performing the registration.
+	 * @returns {Promise<string>} A promise that resolves to a status indicating the outcome of the registration process.
+	 * @throws {HttpBadRequest} Throws an error if the registration process fails.
+	 */
 	async RegisterCPO(data) {
 		try {
 			const password = generator.generate({ length: 10, numbers: false });
@@ -58,6 +84,16 @@ module.exports = class MerchantService {
 		}
 	}
 
+	/**
+	 * Checks the validity of the provided data for registering a Charging Point Operator (CPO).
+	 *
+	 * @async
+	 * @function CheckRegisterCPO
+	 * @param {string} type - The type of data to be checked (e.g., "username", "contact_number", "contact_email").
+	 * @param {string} value - The value of the data to be checked.
+	 * @returns {Promise<string>} A promise that resolves to a status indicating the outcome of the validation process.
+	 * @throws {HttpBadRequest} Throws an error if the validation process fails.
+	 */
 	async CheckRegisterCPO(type, value) {
 		if (type === "username" && !String(value).match(/^[a-zA-Z0-9_]+$/))
 			throw new HttpBadRequest(
@@ -93,8 +129,14 @@ module.exports = class MerchantService {
 	}
 
 	/**
-	 * @param {String} cpoOwnerName
-	 * @returns
+	 * Searches for Charging Point Operators (CPOs) by their name.
+	 * If the provided name is ":cpo_owner_name", it returns a list of CPOs with pagination applied.
+	 * Otherwise, it searches for CPOs with names matching the provided string in a case-insensitive manner.
+	 *
+	 * @async
+	 * @function SearchCPOByName
+	 * @param {string} cpoOwnerName - The name of the Charging Point Operator (CPO) to search for.
+	 * @returns {Promise<Object[]>} A promise that resolves to an array of CPO objects that match the search criteria.
 	 */
 	async SearchCPOByName(cpoOwnerName) {
 		// Check if it is empty, then return all of the lists
@@ -111,6 +153,18 @@ module.exports = class MerchantService {
 		return result;
 	}
 
+	/**
+	 * Updates a Charging Point Operator (CPO) by its ID with the provided data.
+	 *
+	 * @async
+	 * @function UpdateCPOByID
+	 * @param {Object} options - The options object.
+	 * @param {number} options.id - The ID of the Charging Point Operator (CPO) to update.
+	 * @param {Object} options.data - The data to update the CPO with.
+	 * @param {string} options.admin_id - The ID of the admin performing the update.
+	 * @returns {Promise<string>} A promise that resolves to a string indicating the result of the update operation.
+	 * @throws {HttpBadRequest} Throws an error if the provided data contains invalid inputs or if the update operation fails.
+	 */
 	async UpdateCPOByID({ id, data, admin_id }) {
 		try {
 			const VALID_INPUTS = [
@@ -184,6 +238,17 @@ module.exports = class MerchantService {
 		}
 	}
 
+	/**
+	 * Adds an RFID card tag to a Charging Point Operator (CPO) identified by its ID.
+	 *
+	 * @async
+	 * @function AddRFID
+	 * @param {number} cpoOwnerID - The ID of the Charging Point Operator (CPO) to add the RFID card tag to.
+	 * @param {string} rfidCardTag - The RFID card tag to add.
+	 * @param {string} admin_id - The ID of the admin performing the operation.
+	 * @returns {Promise<string>} A promise that resolves to a string indicating the result of the operation.
+	 * @throws {HttpBadRequest} Throws an error if the operation fails.
+	 */
 	async AddRFID(cpoOwnerID, rfidCardTag, admin_id) {
 		try {
 			const result = await this.#repository.AddRFID(cpoOwnerID, rfidCardTag);
@@ -211,6 +276,17 @@ module.exports = class MerchantService {
 		}
 	}
 
+	/**
+	 * Performs a top-up operation for a Charging Point Operator (CPO) identified by its ID.
+	 *
+	 * @async
+	 * @function Topup
+	 * @param {number} cpoOwnerID - The ID of the Charging Point Operator (CPO) to top up.
+	 * @param {number} amount - The amount to top up.
+	 * @param {string} admin_id - The ID of the admin performing the top-up operation.
+	 * @returns {Promise<Object>} A promise that resolves to an object containing the status of the operation and the new balance after top-up.
+	 * @throws {HttpBadRequest} Throws an error if the operation fails.
+	 */
 	async Topup(cpoOwnerID, amount, admin_id) {
 		try {
 			if (amount <= 0) throw new HttpBadRequest("INVALID_AMOUNT", []);
@@ -245,12 +321,29 @@ module.exports = class MerchantService {
 		}
 	}
 
+	/**
+	 * Retrieves the top-up information for a Charging Point Operator (CPO) identified by its ID.
+	 *
+	 * @async
+	 * @function GetTopupByID
+	 * @param {number} cpoOwnerID - The ID of the Charging Point Operator (CPO) to retrieve top-up information for.
+	 * @returns {Promise<Object>} A promise that resolves to the top-up information for the specified CPO.
+	 */
 	async GetTopupByID(cpoOwnerID) {
 		const result = await this.#repository.GetTopupByID(cpoOwnerID);
 
 		return result;
 	}
 
+	/**
+	 * Voids a top-up transaction identified by its reference ID.
+	 *
+	 * @async
+	 * @function VoidTopup
+	 * @param {string} referenceID - The reference ID of the top-up transaction to void.
+	 * @param {number} admin_id - The ID of the administrator performing the void operation.
+	 * @returns {Promise<Object>} A promise that resolves to an object containing the status of the void operation, the current balance after voiding, and the reference number of the voided transaction.
+	 */
 	async VoidTopup(referenceID, admin_id) {
 		try {
 			const result = await this.#repository.VoidTopup(referenceID);
@@ -282,6 +375,18 @@ module.exports = class MerchantService {
 		}
 	}
 
+	/**
+	 * Activates or deactivates a Charging Point Operator (CPO) account based on the specified action.
+	 *
+	 * @async
+	 * @function ChangeCPOAccountStatus
+	 * @param {string} action - The action to perform, either 'activate' or 'deactivate'.
+	 * @param {number} userID - The ID of the CPO account to activate or deactivate.
+	 * @param {number} admin_id - The ID of the administrator performing the action.
+	 * @returns {Promise<string>} A promise that resolves to a string indicating the success or failure of the action.
+	 *                              Possible return values: 'SUCCESS' if the action was successful,
+	 *                              'NO_CHANGES_APPLIED' if no changes were applied, or an error message if the action failed.
+	 */
 	async ChangeCPOAccountStatus(action, userID, admin_id) {
 		try {
 			if (!["activate", "deactivate"].includes(action))
@@ -320,12 +425,30 @@ module.exports = class MerchantService {
 		}
 	}
 
+	/**
+	 * Retrieves details of company partners.
+	 *
+	 * @async
+	 * @function GetCompanyPartnerDetails
+	 * @returns {Promise<any>} A promise that resolves to the details of company partners.
+	 */
 	async GetCompanyPartnerDetails() {
 		const result = await this.#repository.GetCompanyPartnerDetails();
 
 		return result;
 	}
 
+	/**
+	 * Registers company partner details.
+	 *
+	 * @async
+	 * @function RegisterCompanyPartnerDetails
+	 * @param {string} companyName - The name of the company.
+	 * @param {string} address - The address of the company.
+	 * @param {string} id - The ID of the admin performing the registration.
+	 * @returns {Promise<Object>} A promise that resolves to an object containing the registered party ID and a success message.
+	 * @throws {HttpBadRequest} Throws an error if the location is not found or if the registration attempt fails.
+	 */
 	async RegisterCompanyPartnerDetails(companyName, address, id) {
 		try {
 			const geocodedAddress = await axios.get(
@@ -384,6 +507,18 @@ module.exports = class MerchantService {
 		}
 	}
 
+	/**
+	 * Updates company partner details.
+	 *
+	 * @async
+	 * @function UpdateCompanyPartnerDetails
+	 * @param {Object} data - The data object containing the address, ID, and admin ID.
+	 * @param {string} data.address - The updated address of the company partner.
+	 * @param {string} data.id - The ID of the company partner.
+	 * @param {string} data.admin_id - The ID of the admin performing the update.
+	 * @returns {Promise<string|Object>} A promise that resolves to "SUCCESS" if the update is successful, or the result object if unsuccessful.
+	 * @throws {HttpBadRequest} Throws an error if the location is not found or if the update attempt fails.
+	 */
 	async UpdateCompanyPartnerDetails({ address, id, admin_id }) {
 		try {
 			const geocodedAddress = await axios.get(
@@ -437,6 +572,15 @@ module.exports = class MerchantService {
 		}
 	}
 
+	/**
+	 * Generates a party ID based on the provided company name.
+	 *
+	 * @async
+	 * @private
+	 * @method #GeneratePartyID
+	 * @param {string} companyName - The name of the company.
+	 * @returns {Promise<string>} A promise that resolves to the generated party ID.
+	 */
 	async #GeneratePartyID(companyName) {
 		/**
 		 * @Steps
