@@ -359,7 +359,10 @@ module.exports = class MerchantService {
 					action: "CREATED Company Partner Details",
 					remarks: "success",
 				});
-				return "SUCCESS";
+				return {
+					party_id,
+					message: "SUCCESS",
+				};
 			}
 
 			await this.#repository.AuditTrail({
