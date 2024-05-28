@@ -180,6 +180,24 @@ module.exports = class MerchantRepository {
 		});
 	}
 
+	CheckIfColumnValueExists({ table, column, value }) {
+		const QUERY = `
+			SELECT 1 
+			FROM ${table}
+			WHERE ${column} = ?
+		`;
+
+		return new Promise((resolve, reject) => {
+			mysql.query(QUERY, [value], (err, result) => {
+				if (err) {
+					reject(err);
+				}
+
+				resolve(result);
+			});
+		});
+	}
+
 	/**
 	 * Adds an RFID card tag to a Charging Point Operator (CPO) by ID.
 	 *
