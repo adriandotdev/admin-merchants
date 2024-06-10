@@ -34,6 +34,7 @@ app.use(
 			"http://localhost:3000",
 			"http://localhost:5173",
 			"https://v2-stg-parkncharge.sysnetph.com",
+			"http://localhost:3001",
 		],
 		methods: ["OPTIONS", "GET", "POST", "PUT", "DELETE", "PATCH"],
 	})
