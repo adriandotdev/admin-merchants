@@ -28,9 +28,16 @@ module.exports = class MerchantService {
 	 * @throws {Error} Throws an error if the retrieval of CPOs fails.
 	 */
 	async GetCPOs(data) {
+		const totalCPOsInDB = await this.#repository.CountCPOs(data);
 		const result = await this.#repository.GetCPOs(data);
 
-		return result;
+		return {
+			cpos: result,
+			total_cpos_returned: result.length,
+			total_cpos: totalCPOsInDB[0].total_cpos,
+			limit: data.limit,
+			offset: data.offset,
+		};
 	}
 
 	/**
