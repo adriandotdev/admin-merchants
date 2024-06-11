@@ -1,6 +1,25 @@
 const mysql = require("../database/mysql");
 
 module.exports = class MerchantRepository {
+	CountCPOs() {
+		const QUERY = `
+			SELECT
+				COUNT(*) AS total_cpos
+			FROM
+				cpo_owners
+		`;
+
+		return new Promise((resolve, reject) => {
+			mysql.query(QUERY, (err, result) => {
+				if (err) {
+					reject(err);
+				}
+
+				resolve(result);
+			});
+		});
+	}
+
 	/**
 	 * Retrieves a list of Charging Point Operators (CPOs) with pagination.
 	 *
